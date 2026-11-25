@@ -5,7 +5,7 @@ enum DestinoProfe: Hashable {
     case ficha(String)
     case horario
     case rutina(String)
-    case planes, cobros, clases, avisos, ajustes
+    case planes, cobros, clases, avisos, ajustes, plan
 }
 
 /// Qué rutina se abre en el armado: una nueva o una existente.
@@ -26,6 +26,9 @@ enum HojaProfe: Identifiable, Hashable {
     case elegirRutina([String])
     case clase(String)
     case perfil(DestinoPerfil?, Bool)
+    case tope(String)
+    case elegirPlan
+    case compra
     case ajustes
     case ejercicios
     case detalle(String)
@@ -42,6 +45,9 @@ enum HojaProfe: Identifiable, Hashable {
         case .elegirRutina(let a): return "elegir-\(a.joined())"
         case .clase(let c): return "clase-\(c)"
         case .perfil(let d, let q): return "perfil-\(String(describing: d))-\(q)"
+        case .tope(let n): return "tope-\(n)"
+        case .elegirPlan: return "elegir-plan"
+        case .compra: return "compra"
         case .ajustes: return "ajustes"
         case .ejercicios: return "ejercicios"
         case .detalle(let e): return "detalle-\(e)"
@@ -141,6 +147,9 @@ struct RaizProfe: View {
             case .elegirRutina(let a): HojaElegirRutina(alumnoIds: a)
             case .clase(let c): HojaClase(claseId: c)
             case .perfil(let d, let q): TuPerfil(inicial: d, qr: q)
+            case .tope(let n): HojaTope(nombre: n)
+            case .elegirPlan: ElegirPlan()
+            case .compra: CompraAppStore(plan: .pro, periodo: .mensual) {}
             case .ajustes: Ajustes()
             case .ejercicios: NavigationStack { Biblioteca(volver: "Cerrar") }
             case .detalle(let id):
@@ -181,6 +190,11 @@ struct RaizProfe: View {
         case .lista: nav.hoja = .lista("c1")
         case .nuevo: nav.hoja = .nuevo
         case .ajustes: nav.hoja = .ajustes
+        case .tuPlan: nav.inicio = [.plan]
+        case .elegirPlan: nav.inicio = [.plan]; nav.hoja = .elegirPlan
+        case .compra: nav.inicio = [.plan]; nav.hoja = .compra
+        case .tope: estado.vencerPrueba(); nav.hoja = .tope("Juli Torres")
+        case .planGratis: estado.vencerPrueba(); nav.inicio = [.plan]
         case .planes: nav.inicio = [.planes]
         case .cobrosPantalla: nav.inicio = [.cobros]
         case .clases: nav.inicio = [.clases]
@@ -211,6 +225,7 @@ private struct Destinos: ViewModifier {
             case .clases: PantallaClases()
             case .avisos: PantallaAvisos()
             case .ajustes: AjustesProfe()
+            case .plan: TuPlan()
             }
         }
     }

@@ -28,6 +28,12 @@ protocol Datos: Sendable {
     func crearClase(_ clase: ClaseFija, unica fecha: String?) async throws
     func crearAlumno(nombre: String, plan: String) async throws -> Alumno
 
+    // Suscripción del profe a Otra Más (por App Store)
+    func suscripcion() async throws -> Suscripcion
+    func comprarPlan(_ plan: PlanOM, periodo: PeriodoPlan) async throws
+    func cancelarSuscripcion() async throws
+    func restaurarCompras() async throws
+
     // Gestión del profe
     func guardarDetalle(alumnoId: String, _ detalle: DetalleAlumno) async throws
     func guardarAbonos(_ abonos: [Abono]) async throws
@@ -69,6 +75,10 @@ struct DatosDeMuestra: Datos {
         Alumno(id: UUID().uuidString, nombre: nombre, tono: .berenjena, plan: plan, horario: "a definir",
                cuota: .alDia, asistencias: 0, clasesDelMes: 0, racha: 0, progreso: nil, pasos: nil, ultimaVez: 0)
     }
+    func suscripcion() async throws -> Suscripcion { Self.suscripcion }
+    func comprarPlan(_ plan: PlanOM, periodo: PeriodoPlan) async throws {}
+    func cancelarSuscripcion() async throws {}
+    func restaurarCompras() async throws {}
     func guardarDetalle(alumnoId: String, _ detalle: DetalleAlumno) async throws {}
     func guardarAbonos(_ abonos: [Abono]) async throws {}
     func guardarClaseFija(_ clase: ClaseFija) async throws {}

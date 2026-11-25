@@ -504,6 +504,7 @@ struct HojaDatosAlumno: View {
     @State private var abonoId = "m3"
     @State private var claseId: String?
     @State private var inicio = Fecha.fecha("2026-11-30")
+    @State private var tope = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -548,6 +549,7 @@ struct HojaDatosAlumno: View {
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
             Boton(titulo: alumnoId == nil ? "Crear y copiar su link" : "Guardar", icono: .tilde, variante: .prim, alto: .alto, ancho: true) {
+                if alumnoId == nil && !estado.puedeSumarAlumno { tope = true; return }
                 if let id = alumnoId {
                     estado.actualizar(alumno: id, nombre: nombre, telefono: telefono, objetivo: objetivo, lesiones: lesiones, abonoId: abonoId, claseFijaId: claseId)
                 } else {
@@ -562,6 +564,7 @@ struct HojaDatosAlumno: View {
         }
         .padding(.horizontal, Espacio.margen)
         .estiloHoja()
+        .sheet(isPresented: $tope) { HojaTope(nombre: nombre) }
         .onAppear {
             guard let id = alumnoId, let a = estado.alumno(id), let d = estado.detalle(id) else { return }
             nombre = a.nombre; telefono = d.telefono; objetivo = d.objetivo; lesiones = d.lesiones; abonoId = d.abonoId; claseId = d.claseFijaId

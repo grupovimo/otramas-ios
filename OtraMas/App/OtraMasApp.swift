@@ -85,6 +85,7 @@ enum Arranque: String, CaseIterable {
     case rutinas, rutinaDetalle = "rutina-detalle", asignar, enviar, pdf
     case perfil, editarPerfil = "editar-perfil", asiTeVen = "asi-te-ven", qr
     case planes, cobrosPantalla = "cobros-pantalla", clases, avisos, ajustesProfe = "ajustes-profe"
+    case tuPlan = "tu-plan", elegirPlan = "elegir-plan", compra, tope, planGratis = "plan-gratis"
     case fichaProgreso = "ficha-progreso", fichaPagos = "ficha-pagos", fichaAsistencia = "ficha-asistencia"
     case historial, progreso, misClases = "mis-clases", pagos, avisosAlumno = "avisos-alumno", perfilAlumno = "perfil-alumno", mas
     case hoy, logros, miplan

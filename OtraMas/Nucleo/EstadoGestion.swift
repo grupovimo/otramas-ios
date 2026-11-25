@@ -45,6 +45,7 @@ extension Estado {
         if let k = profe.horario.firstIndex(where: { $0.id == claseFijaId }) { profe.horario[k].inscriptos.append(id) }
         profe.detalles[id] = DetalleAlumno(telefono: telefono, objetivo: objetivo, lesiones: lesiones, abonoId: abonoId,
                                            claseFijaId: claseFijaId, inicio: inicio)
+        empezarPruebaSiCorresponde()
         return id
     }
 

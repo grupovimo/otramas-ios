@@ -209,6 +209,17 @@ struct TuPerfil: View {
                         }
                         directorio
                         Tarjeta {
+                            NavigationLink { TuPlan() } label: {
+                                HStack(spacing: 12) {
+                                    IconoVista(.rayo, tamano: 20).foregroundStyle(Color.berenjena800)
+                                        .frame(width: 40, height: 40).background(Color.yema, in: Circle())
+                                    NomSub(nombre: "Tu plan de Otra Más", sub: Text(estado.enPrueba ? "Pro · te quedan \(estado.diasDePrueba) días de prueba" : estado.suscripcion.plan.nombre))
+                                    IconoVista(.der, tamano: 16).foregroundStyle(Color.arena300)
+                                }
+                                .padding(.horizontal, 16).frame(minHeight: 64).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Divisor()
                             Button { ajustes = true } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: "gearshape").font(.system(size: 18, weight: .semibold)).foregroundStyle(Color.berenjena800)

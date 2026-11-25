@@ -14,8 +14,10 @@ final class PantallasTests: XCTestCase {
         ventana = nil
     }
 
-    private func montar<V: View>(_ vista: V, segundos: Double = 0.6, file: StaticString = #filePath, line: UInt = #line) {
+    private func montar<V: View>(_ vista: V, segundos: Double = 0.6, preparar: (Estado) -> Void = { _ in },
+                                 file: StaticString = #filePath, line: UInt = #line) {
         let estado = Estado()
+        preparar(estado)
         let nav = NavProfe()
         let raiz = vista
             .environment(estado)
@@ -154,6 +156,51 @@ final class PantallasTests: XCTestCase {
         e.pagarCuotaAlumno()
         XCTAssertTrue(e.alumno.cuotaPagada)
         XCTAssertFalse(e.alumno.historial.isEmpty)
+    }
+
+    // Suscripción
+    func testTuPlanPrueba() { montar(NavigationStack { TuPlan() }) }
+    func testTuPlanGratis() { montar(NavigationStack { TuPlan() }, preparar: { $0.vencerPrueba() }) }
+    func testTuPlanPago() { montar(NavigationStack { TuPlan() }, preparar: { $0.vencerPrueba(); $0.comprar(.personal, .anual) }) }
+    func testElegirPlan() { montar(ElegirPlan()) }
+    func testCompraAppStore() { montar(CompraAppStore(plan: .personal, periodo: .anual) {}) }
+    func testTope() { montar(HojaTope(nombre: "Juli Torres"), preparar: { $0.vencerPrueba() }) }
+
+    func testSuscripcion() {
+        let e = Estado()
+        XCTAssertTrue(e.enPrueba)
+        XCTAssertEqual(e.diasDePrueba, 9)
+        XCTAssertEqual(e.planActual, .pro)
+        XCTAssertEqual(e.tope, 60)
+        XCTAssertTrue(e.puedeSumarAlumno)
+        XCTAssertEqual(e.planQueAlcanza, .pro)
+        XCTAssertEqual(PlanOM.personal.precioAnual, 99_000)
+        // En la prueba: elegir Personal no cobra hoy; el primer cobro es al terminar la prueba.
+        e.comprar(.personal, .mensual)
+        XCTAssertEqual(e.suscripcion.planElegido, .personal)
+        XCTAssertEqual(e.suscripcion.proximoCobro, "2026-12-03")
+        XCTAssertTrue(e.suscripcion.facturas.isEmpty)
+        // Vence la prueba sin plan → Gratis, 10 activos y el resto en pausa (no se borran).
+        let f = Estado()
+        let total = f.activos
+        f.vencerPrueba()
+        XCTAssertEqual(f.planActual, .gratis)
+        XCTAssertEqual(f.activos, 10)
+        XCTAssertEqual(f.profe.alumnos.count, 30)
+        XCTAssertEqual(f.profe.detalles.values.filter { $0.pausadoPorTope }.count, total - 10)
+        XCTAssertFalse(f.puedeSumarAlumno)
+        // Pagar Pro cobra hoy, deja factura y vuelven los pausados.
+        f.comprar(.pro, .mensual)
+        XCTAssertEqual(f.suscripcion.facturas.first?.monto, 19_900)
+        XCTAssertEqual(f.activos, total) // vuelven los que pausó el tope; Ramiro (pausa a mano) sigue en pausa
+        XCTAssertEqual(f.estadoDe("ramiro"), .pausado)
+        f.cancelarSuscripcion()
+        XCTAssertFalse(f.suscripcion.renueva)
+        // La prueba arranca con el 3.er alumno.
+        let g = Estado()
+        g.suscripcion = Suscripcion(plan: .gratis, precioFijoHasta: "2027-05-24")
+        g.empezarPruebaSiCorresponde()
+        XCTAssertEqual(g.suscripcion.pruebaHasta, "2026-12-08")
     }
 
     func testHojaClase() { montar(HojaClase(claseId: "fm@2026-11-26")) }

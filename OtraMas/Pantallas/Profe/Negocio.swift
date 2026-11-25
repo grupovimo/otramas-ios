@@ -577,6 +577,8 @@ struct AjustesProfe: View {
             }
             TituloSeccion("Tu trabajo")
             Tarjeta {
+                fila(.rayo, "Tu plan de Otra Más", estado.enPrueba ? "Pro · te quedan \(estado.diasDePrueba) días de prueba" : "\(estado.suscripcion.plan.nombre) · \(estado.activos) de \(estado.tope) alumnos") { nav.inicio.append(.plan) }
+                Divisor()
                 fila(.plata, "Cobros", "Alias, medios y recordatorio") { nav.inicio.append(.cobros) }
                 Divisor()
                 fila(.recibo, "Planes y precios", "\(estado.profe.abonos.count) abonos") { nav.inicio.append(.planes) }

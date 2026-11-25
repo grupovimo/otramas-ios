@@ -16,6 +16,7 @@ struct Inicio: View {
             .padding(.horizontal, Espacio.margen)
             .padding(.top, 24)
         } cuerpo: {
+            FranjaPlan()
             if let c = estado.proxima { proxima(c) }
             TituloSeccion("Para resolver")
             Tarjeta {

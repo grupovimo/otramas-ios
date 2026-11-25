@@ -15,6 +15,8 @@ final class Estado {
     var perfil: Perfil?
     /// El perfil profesional del profe (su página pública).
     var perfilProfe: PerfilProfe = DatosDeMuestra.perfilLucia
+    /// La suscripción del profe a Otra Más.
+    var suscripcion: Suscripcion = DatosDeMuestra.suscripcion
     var ejercicios: [Ejercicio] = DatosDeMuestra.ejercicios
     var tipsProfe: [Tip] = DatosDeMuestra.tipsProfe
     var tipsAlumno: [Tip] = DatosDeMuestra.tipsAlumno
@@ -28,10 +30,13 @@ final class Estado {
 
     /// Trae lo último de `datos`. Secuencial a propósito: nunca `async let` (cerraba la app en Release).
     func cargar() async {
+        // La maqueta ya arranca con todo en memoria: recargarla pisaría lo que se hizo al abrir.
+        if datos is DatosDeMuestra { return }
         if let p = try? await datos.panelProfe() { profe = p }
         if let a = try? await datos.panelAlumno() { alumno = a }
         if let e = try? await datos.ejercicios() { ejercicios = e }
         if let p = try? await datos.perfilProfe() { perfilProfe = p }
+        if let s = try? await datos.suscripcion() { suscripcion = s }
         if let t = try? await datos.tips(para: .profe) { tipsProfe = t }
         if let t = try? await datos.tips(para: .alumno) { tipsAlumno = t }
     }

@@ -75,6 +75,8 @@ struct FotoProgreso: Codable, Hashable, Identifiable {
 /// Lo que el profe sabe de cada alumno, más allá de la lista.
 struct DetalleAlumno: Codable, Hashable {
     var estado: EstadoAlumno = .activo
+    /// Quedó en pausa por superar el tope del plan (vuelve solo al subir de plan).
+    var pausadoPorTope = false
     var telefono: String
     var objetivo: Objetivo?
     var lesiones: [String] = []
