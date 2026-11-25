@@ -630,9 +630,15 @@ struct AjustesProfe: View {
                 fila(.wa, "Escribinos", "Te responde una persona") { estado.avisar("Abrimos WhatsApp con el equipo de Otra Más.") }
                 Divisor()
                 fila(.cambio, "Ver la app del alumno", "Para mostrarle cómo la ve") { withAnimation { lado = Lado.alumno.rawValue } }
-                Divisor()
-                fila(.recarga, "Rehacer el inicio", "Volver a las preguntas del principio") { withAnimation { estado.borrarPerfil(); lado = "" } }
             }
+            Button { withAnimation { estado.borrarPerfil(); lado = "" } } label: {
+                Text("Cerrar sesión").tipo(.texto(16, 700)).foregroundStyle(Color.error)
+                    .frame(maxWidth: .infinity).frame(height: 52)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: Radio.tarjeta, style: .continuous))
+            }
+            .buttonStyle(Apretable())
+            .padding(.top, 8)
+            .accessibilityHint("Vuelve a elegir profe o alumno")
         }
         .onDisappear { estado.guardar(cobros: estado.profe.cobros) }
         .sheet(isPresented: $perfil) { TuPerfil() }

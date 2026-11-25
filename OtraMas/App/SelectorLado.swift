@@ -24,7 +24,7 @@ struct CambiarLado: ViewModifier {
                         lado = lado == Lado.profe.rawValue ? Lado.alumno.rawValue : Lado.profe.rawValue
                     }
                 }
-                Button("Rehacer el inicio") { withAnimation { estado.borrarPerfil(); lado = "" } }
+                Button("Cerrar sesión", role: .destructive) { withAnimation { estado.borrarPerfil(); lado = "" } }
                 Button("Cancelar", role: .cancel) {}
             }
             .sheet(isPresented: $ajustes) {

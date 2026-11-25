@@ -490,7 +490,7 @@ struct PerfilAlumnoVista: View {
                     estado.guardarPerfil(p); Haptico.exito(); estado.avisar("Listo, tu perfil quedó al día."); dismiss()
                 }
                 Button { withAnimation { estado.borrarPerfil(); lado = "" } } label: {
-                    Text("Rehacer el inicio").tipo(.texto(15, 700)).foregroundStyle(Color.berenjena800).frame(maxWidth: .infinity).frame(height: 48)
+                    Text("Cerrar sesión").tipo(.texto(15, 700)).foregroundStyle(Color.error).frame(maxWidth: .infinity).frame(height: 48)
                 }
             }
         }

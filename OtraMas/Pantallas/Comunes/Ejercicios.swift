@@ -238,7 +238,7 @@ struct Ajustes: View {
                         Button {
                             dismiss()
                             withAnimation(.easeInOut(duration: 0.3)) { estado.borrarPerfil(); lado = "" }
-                        } label: { fila(.recarga, "Rehacer el inicio") }
+                        } label: { fila(.recarga, "Cerrar sesión") }
                             .buttonStyle(.plain)
                     }
                     .padding(.top, 12)

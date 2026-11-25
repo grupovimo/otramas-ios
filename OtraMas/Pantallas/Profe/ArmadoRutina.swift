@@ -208,9 +208,34 @@ struct ArmadoRutina: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
+                Divisor()
+                Button(role: .destructive) { quitar(e) } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "trash").font(.system(size: 15, weight: .semibold))
+                        Text("Quitar de la rutina").tipo(.texto(15, 700))
+                    }
+                    .foregroundStyle(Color.error)
+                    .frame(maxWidth: .infinity).frame(height: 48)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Quitar \(e.nombre) de la rutina")
             }
         }
+        .contextMenu {
+            Button(role: .destructive) { quitar(e) } label: { Label("Quitar de la rutina", systemImage: "trash") }
+        }
+    }
+
+    private func quitar(_ e: EjercicioDeRutina) {
+        guard let j = indiceEjercicio(e.id) else { return }
+        Haptico.seleccion()
+        withAnimation(.snappy(duration: 0.3)) {
+            rutina.dias[dia].ejercicios.remove(at: j)
+            if abierto == e.id { abierto = nil }
+        }
+        estado.avisar("Quitamos \(e.nombre).")
     }
 
     private func resumen(_ e: EjercicioDeRutina) -> String {
