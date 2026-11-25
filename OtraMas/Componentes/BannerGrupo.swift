@@ -26,7 +26,7 @@ enum PromoGrupo: String, CaseIterable {
         }
     }
     var accion: String {
-        switch self { case .deAPoco: return "Encontrá tu nutri"; case .laColumna: return "Leer La Columna"; case .bancamos: return "Armá tu página" }
+        switch self { case .deAPoco: return "Encontrá tu nutri"; case .laColumna: return "Leer La Columna"; case .bancamos: return "Avisame" }
     }
     var link: URL {
         switch self {
@@ -36,6 +36,15 @@ enum PromoGrupo: String, CaseIterable {
         }
     }
     var pronto: Bool { self == .bancamos }
+    /// Si el sitio ya existe. Mientras no, el CTA muestra «Te avisamos cuando salga» en vez de abrir el navegador.
+    var disponible: Bool { false }
+    var lineaPronto: String {
+        switch self {
+        case .deAPoco: return "De a Poco, la app para comer mejor con tu nutri, está por salir."
+        case .laColumna: return "La Columna, para escribir y leer a los que atienden, está por salir."
+        case .bancamos: return "Bancamos, para vender tus planes con tu propia página, está por salir."
+        }
+    }
 }
 
 /// Banner de otra marca del grupo, como publicidad real: foto arriba recortada con el radio de la tarjeta,
@@ -44,6 +53,7 @@ struct BannerGrupo: View {
     let promo: PromoGrupo
     @AppStorage private var cerrado: Double
     @Environment(\.openURL) private var abrir
+    @State private var pronto = false
 
     init(_ promo: PromoGrupo) {
         self.promo = promo
@@ -59,7 +69,7 @@ struct BannerGrupo: View {
                 FotoBanner(promo: promo)
                 TextosBanner(promo: promo, accion: {
                     Haptico.seleccion()
-                    abrir(promo.link)
+                    if promo.disponible { abrir(promo.link) } else { pronto = true }
                 }, cerrar: {
                     withAnimation(.snappy) { cerrado = Date().timeIntervalSince1970 }
                 })
@@ -70,7 +80,34 @@ struct BannerGrupo: View {
             .transition(.opacity.combined(with: .scale(scale: 0.97)))
             .padding(.top, 16)
             .accessibilityElement(children: .contain)
+            .sheet(isPresented: $pronto) { HojaPronto(promo: promo) }
         }
+    }
+}
+
+/// Hoja simple para una marca que todavía no salió: la imagen, una línea y «Te avisamos cuando salga».
+struct HojaPronto: View {
+    @Environment(Estado.self) private var estado
+    @Environment(\.dismiss) private var dismiss
+    let promo: PromoGrupo
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image(promo.imagen).resizable().aspectRatio(2, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: Radio.tarjeta, style: .continuous))
+                .padding(.top, 24)
+                .accessibilityLabel(promo.marca)
+            Etiqueta("De Grupo Vimo · Pronto")
+            Text(promo.lineaPronto).tipo(.texto(17, 600)).foregroundStyle(Color.tinta).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Boton(titulo: "Te avisamos cuando salga", icono: .tilde, variante: .prim, alto: .alto, ancho: true) {
+                Haptico.exito()
+                estado.avisar("Listo: te avisamos cuando salga \(promo.marca).")
+                dismiss()
+            }
+        }
+        .padding(.horizontal, Espacio.margen)
+        .padding(.bottom, 8)
+        .estiloHoja([.medium])
     }
 }
 

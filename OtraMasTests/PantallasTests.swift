@@ -220,6 +220,14 @@ final class PantallasTests: XCTestCase {
         }
     }
 
+    func testHojaPronto() {
+        for p in PromoGrupo.allCases {
+            XCTAssertFalse(p.disponible, "\(p.marca): el sitio todavía no existe")
+            montar(HojaPronto(promo: p), segundos: 0.3)
+        }
+        XCTAssertEqual(PromoGrupo.bancamos.accion, "Avisame")
+    }
+
     func testBannerCerradoNoVuelvePor30Dias() {
         let clave = "banner-\(PromoGrupo.deAPoco.rawValue)"
         UserDefaults.standard.set(Date().timeIntervalSince1970 - 29 * 24 * 3600, forKey: clave)
