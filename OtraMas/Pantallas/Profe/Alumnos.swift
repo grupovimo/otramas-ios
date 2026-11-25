@@ -161,9 +161,10 @@ struct FichaAlumno: View {
         } cuerpo: {
             HStack(spacing: 8) {
                 accion("WhatsApp", .wa, color: .ok) { estado.avisar("Abrimos WhatsApp con \(a.primerNombre).") }
-                accion("Rutina", .pesa) { nav.rutinaAbierta = true }
+                accion("Rutina", .pesa) { abrirRutina(a) }
                 accion("Cobrar", .plata) { nav.hoja = .cobrar(a.id) }
             }
+            tarjetaRutina(a)
             if let p = a.progreso {
                 Tarjeta(relleno: 16) {
                     HStack(alignment: .bottom) {
@@ -212,6 +213,44 @@ struct FichaAlumno: View {
             }
             .padding(.top, 12)
         }
+    }
+
+    private func abrirRutina(_ a: Alumno) {
+        if let r = estado.rutinaActual(de: a.id) { nav.alumnos.append(.rutina(r.rutina.id)); return }
+        nav.hoja = .elegirRutina([a.id])
+    }
+
+    /// La rutina que tiene: verla o cambiarla. Sin rutina, elegir una.
+    @ViewBuilder
+    private func tarjetaRutina(_ a: Alumno) -> some View {
+        let actual = estado.rutinaActual(de: a.id)
+        Tarjeta(relleno: 16) {
+            HStack(spacing: 12) {
+                if let r = actual?.rutina {
+                    MiniaturasRutina(ids: Array(r.ejerciciosIds.prefix(1)), tamano: 52)
+                } else {
+                    IconoVista(.pesa, tamano: 24).foregroundStyle(Color.yema700)
+                        .frame(width: 52, height: 52).background(Color.yema100, in: RoundedRectangle(cornerRadius: Radio.control, style: .continuous))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Etiqueta("Rutina")
+                    Text(actual?.rutina.nombre ?? "Sin rutina").tipo(.texto(17, 700)).foregroundStyle(Color.tinta).lineLimit(1)
+                    Text(actual.map { "\($0.rutina.resumen) · desde el \(Fecha.corta($0.desde))" } ?? "Elegí una y le llega por WhatsApp")
+                        .tipo(.texto(13, 400)).foregroundStyle(Color.texto2).lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            HStack(spacing: 8) {
+                if let r = actual?.rutina {
+                    Boton(titulo: "Ver rutina", variante: .suave, alto: .chico, ancho: true) { nav.alumnos.append(.rutina(r.id)) }
+                    Boton(titulo: "Cambiar rutina", variante: .prim, alto: .chico, ancho: true) { nav.hoja = .elegirRutina([a.id]) }
+                } else {
+                    Boton(titulo: "Elegir rutina", icono: .pesa, variante: .prim, alto: .chico, ancho: true) { nav.hoja = .elegirRutina([a.id]) }
+                }
+            }
+            .padding(.top, 12)
+        }
+        .padding(.top, 12)
     }
 
     private func promedio(_ pasos: [Double]) -> String {

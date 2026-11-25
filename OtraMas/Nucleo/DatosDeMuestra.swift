@@ -61,7 +61,7 @@ extension DatosDeMuestra {
                 EjercicioDeRutina(id: "e2", ejercicioId: "peso-muerto-rumano", nombre: "Peso muerto rumano", foto: "foto-tecnica", focoX: 0.66, focoY: 0.70, series: 4, reps: 8, kilos: 50, pausa: 90),
                 EjercicioDeRutina(id: "e3", ejercicioId: "estocada", nombre: "Estocadas", foto: "foto-domicilio", focoX: 0.3, focoY: 0.6, series: 3, reps: 12, kilos: 12, pausa: 60),
                 EjercicioDeRutina(id: "e4", ejercicioId: "puente-gluteos", nombre: "Puente de glúteos", foto: "foto-tecnica", focoX: 0.4, focoY: 0.5, series: 3, reps: 12, kilos: 30, pausa: 60),
-                EjercicioDeRutina(id: "e5", ejercicioId: "plancha", nombre: "Plancha frontal", foto: "foto-detalle", focoX: 0.5, focoY: 0.5, series: 3, reps: 30, kilos: 0, pausa: 60),
+                EjercicioDeRutina(id: "e5", ejercicioId: "plancha", nombre: "Plancha frontal", foto: "foto-detalle", focoX: 0.5, focoY: 0.5, series: 3, reps: 30, kilos: 0, pausa: 60, porTiempo: true),
             ]),
             DiaRutina(id: "b", nombre: "Día B", ejercicios: [
                 EjercicioDeRutina(id: "e6", ejercicioId: "bulgara", nombre: "Sentadilla búlgara", foto: "foto-domicilio", focoX: 0.5, focoY: 0.6, series: 3, reps: 10, kilos: 10, pausa: 90),
@@ -72,7 +72,10 @@ extension DatosDeMuestra {
                 EjercicioDeRutina(id: "e9", ejercicioId: "swing-pesa-rusa", nombre: "Swing con pesa rusa", foto: "foto-tecnica", focoX: 0.66, focoY: 0.7, series: 4, reps: 8, kilos: 24, pausa: 120),
                 EjercicioDeRutina(id: "e10", ejercicioId: "step-up", nombre: "Subida al cajón", foto: "foto-domicilio", focoX: 0.4, focoY: 0.6, series: 3, reps: 10, kilos: 8, pausa: 60),
             ]),
-        ])
+        ],
+        objetivo: "Fuerza", nivel: "Intermedio",
+        notas: "Técnica antes que kilos. Si la última repetición sale fea, bajá el peso.",
+        asignaciones: ["carla", "camila", "agustin", "sofia", "tomas", "valentina", "lucila"].map { Asignacion(alumnoId: $0, desde: "2026-11-02") })
 
     static let profe: PanelProfe = {
         let manana = ["carla", "camila", "agustin", "martina", "joaquin", "sofia", "tomas", "valentina", "lucila", "gonzalo"]
@@ -99,16 +102,20 @@ extension DatosDeMuestra {
             ],
             hoy: 24,
             clases: [
-                Clase(id: "c1", hora: "8:00", nombre: "Funcional mañana", lugar: "Plaza Mitre", estado: .termino, cupo: 10,
+                Clase(id: "c1", fijaId: "fm", fecha: "2026-11-24", hora: "8:00", nombre: "Funcional mañana", lugar: "Plaza Mitre", estado: .termino, cupo: 10,
                       inscriptos: manana, presentes: Set(["carla", "camila", "agustin", "joaquin", "sofia", "valentina", "lucila"])),
-                Clase(id: "c2", hora: "10:30", nombre: "Nico Paredes", lugar: "Particular", estado: .termino, cupo: 1,
+                Clase(id: "c2", fijaId: "np", fecha: "2026-11-24", hora: "10:30", nombre: "Nico Paredes", lugar: "Particular", estado: .termino, cupo: 1,
                       inscriptos: ["nico"], presentes: ["nico"], particular: "nico"),
-                Clase(id: "c3", hora: "18:00", nombre: "Funcional tarde", lugar: "Plaza España", estado: .falta("En 2 h 40"), cupo: 12,
+                Clase(id: "c3", fijaId: "ft", fecha: "2026-11-24", hora: "18:00", nombre: "Funcional tarde", lugar: "Plaza España", estado: .falta("En 2 h 40"), cupo: 12,
                       inscriptos: tarde, presentes: Set(tarde.prefix(9))),
             ],
             proxima: "c1",
             proximaEn: "en 25 min",
-            rutina: rutina)
+            rutinas: rutinasMias + plantillas,
+            horario: horarioSemanal,
+            feriados: ["2026-11-23": "Feriado: Día de la Soberanía", "2026-12-08": "Feriado: Inmaculada Concepción",
+                       "2026-12-25": "Navidad", "2027-01-01": "Año nuevo"],
+            hoyISO: "2026-11-24")
     }()
 
     static let alumno = PanelAlumno(

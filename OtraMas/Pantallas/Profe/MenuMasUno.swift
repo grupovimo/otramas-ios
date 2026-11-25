@@ -15,7 +15,7 @@ struct MenuMasUno: View {
                 }
                 GridRow {
                     accion(.gente, "Alumno nuevo", "Con su link listo") { nav.hoja = .nuevo }
-                    accion(.pesa, "Rutina nueva", "De cero o desde una foto") { nav.rutinaAbierta = true }
+                    accion(.pesa, "Rutina nueva", "De cero o desde una foto") { nav.edicion = .nueva }
                 }
             }
         }
@@ -158,7 +158,7 @@ struct HojaPasarLista: View {
     @State private var presentes: Set<String>?
 
     var body: some View {
-        let c = estado.profe.clases.first { $0.id == claseId }
+        let c = estado.clase(claseId)
         let marcados = presentes ?? c?.presentes ?? []
         VStack(alignment: .leading, spacing: 0) {
             CabezaHoja(etiqueta: c.map { "\($0.nombre) · \($0.lugar)" }, titulo: "Pasar lista · \(c?.hora ?? "")")
@@ -249,61 +249,5 @@ struct HojaAlumnoNuevo: View {
         }
         .padding(.horizontal, Espacio.margen)
         .estiloHoja([.medium, .large])
-    }
-}
-
-/// Asignar la rutina a varios alumnos.
-struct HojaAsignar: View {
-    @Environment(Estado.self) private var estado
-    @Environment(\.dismiss) private var dismiss
-    var rutina: Rutina?
-    var alTerminar: (() -> Void)?
-    @State private var elegidos: Set<String> = ["carla"]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            CabezaHoja(etiqueta: rutina?.nombre ?? estado.profe.rutina.nombre, titulo: "Asignar a varios")
-            ScrollView {
-                Tarjeta {
-                    LazyVStack(spacing: 0) {
-                        ForEach(Array(estado.alumnos.enumerated()), id: \.element.id) { i, a in
-                            if i > 0 { Divisor() }
-                            let on = elegidos.contains(a.id)
-                            Button {
-                                Haptico.seleccion()
-                                if on { elegidos.remove(a.id) } else { elegidos.insert(a.id) }
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Iniciales(texto: a.iniciales, tono: a.tono, tamano: 40)
-                                    NomSub(nombre: a.nombre, sub: Text(a.horario))
-                                    IconoVista(.tilde, tamano: 18, grosor: 2.6)
-                                        .foregroundStyle(on ? Color.yema : Color.clear)
-                                        .frame(width: 28, height: 28)
-                                        .background(on ? Color.berenjena800 : Color.clear, in: RoundedRectangle(cornerRadius: 8))
-                                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(on ? Color.clear : Color.arena300, lineWidth: 2))
-                                }
-                                .padding(.horizontal, 16).padding(.vertical, 12).frame(minHeight: 64)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(a.nombre)
-                            .accessibilityAddTraits(on ? .isSelected : [])
-                        }
-                    }
-                }
-                .padding(.top, 24).padding(.bottom, 16)
-            }
-            .scrollIndicators(.hidden)
-            Boton(titulo: elegidos.isEmpty ? "Elegí a quiénes" : "Asignar a \(elegidos.count)", icono: .gente,
-                  variante: .prim, alto: .alto, ancho: true) {
-                estado.guardarRutina(rutina ?? estado.profe.rutina, asignadaA: Array(elegidos))
-                dismiss()
-                alTerminar?()
-            }
-            .disabled(elegidos.isEmpty)
-            .padding(.bottom, 8)
-        }
-        .padding(.horizontal, Espacio.margen)
-        .estiloHoja()
     }
 }

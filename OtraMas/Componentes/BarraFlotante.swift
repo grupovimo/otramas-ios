@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum PestanaProfe: String, CaseIterable, Hashable {
-    case inicio, cuotas, horario, alumnos
+    case inicio, alumnos, rutinas, cuotas
 
     var titulo: String {
         switch self {
         case .inicio: return "Inicio"
         case .cuotas: return "Cuotas"
-        case .horario: return "Horario"
+        case .rutinas: return "Rutinas"
         case .alumnos: return "Alumnos"
         }
     }
@@ -16,14 +16,14 @@ enum PestanaProfe: String, CaseIterable, Hashable {
         switch self {
         case .inicio: return .casa
         case .cuotas: return .plata
-        case .horario: return .cal
+        case .rutinas: return .pesa
         case .alumnos: return .gente
         }
     }
 }
 
 /// La barra flotante integrada del entrenador: una sola pieza con el +1 encastrado.
-/// 70 de alto, a 20 de los lados y 28 de abajo, grilla 1fr 1fr 80 1fr 1fr.
+/// 70 de alto, a 20 de los lados y 28 de abajo, grilla 1fr 1fr 80 1fr 1fr: Inicio · Alumnos · +1 · Rutinas · Cuotas.
 struct BarraFlotante: View {
     @Binding var pestana: PestanaProfe
     @Binding var menuAbierto: Bool
@@ -33,10 +33,10 @@ struct BarraFlotante: View {
     var body: some View {
         HStack(spacing: 0) {
             item(.inicio)
-            item(.cuotas)
-            Color.clear.frame(width: 80)
-            item(.horario)
             item(.alumnos)
+            Color.clear.frame(width: 80)
+            item(.rutinas)
+            item(.cuotas)
         }
         .padding(.horizontal, 6)
         .frame(height: 70)

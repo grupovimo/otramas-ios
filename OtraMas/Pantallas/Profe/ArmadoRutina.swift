@@ -5,7 +5,13 @@ struct ArmadoRutina: View {
     @Environment(Estado.self) private var estado
     @Environment(NavProfe.self) private var nav
     @Environment(\.dismiss) private var dismiss
-    @State private var rutina: Rutina = DatosDeMuestra.rutina
+    @State private var rutina: Rutina
+    @State private var renombrar = false
+    @State private var nombreNuevo = ""
+
+    init(rutina: Rutina = DatosDeMuestra.rutina) {
+        _rutina = State(initialValue: rutina)
+    }
     @State private var dia = 0
     @State private var abierto: String? = "e1"
     @State private var asignar = false
@@ -50,7 +56,7 @@ struct ArmadoRutina: View {
                 let w = g.size.width - 12
                 HStack(spacing: 12) {
                     Boton(titulo: "Guardar", variante: .suave, alto: .alto, ancho: true) {
-                        estado.guardarRutina(rutina)
+                        estado.guardar(rutina: rutina)
                         dismiss()
                     }
                     .frame(width: w / 2.6)
@@ -74,8 +80,21 @@ struct ArmadoRutina: View {
         .sheet(isPresented: $biblioteca) {
             NavigationStack { Biblioteca(elegir: { agregarEjercicio($0) }, volver: "Cerrar") }
         }
-        .sheet(isPresented: $asignar) {
-            HojaAsignar(rutina: rutina) { dismiss() }
+        .onChange(of: asignar) { _, abrir in
+            guard abrir else { return }
+            // Se guarda y se asigna desde la hoja de asignar, ya fuera del armado.
+            estado.guardar(rutina: rutina, avisando: false)
+            let id = rutina.id
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { nav.hoja = .asignarRutina(id, []) }
+        }
+        .alert("Nombre de la rutina", isPresented: $renombrar) {
+            TextField("Piernas y zona media", text: $nombreNuevo)
+            Button("Listo") {
+                let n = nombreNuevo.trimmingCharacters(in: .whitespaces)
+                if !n.isEmpty { rutina.nombre = n }
+            }
+            Button("Cancelar", role: .cancel) {}
         }
     }
 
@@ -97,7 +116,14 @@ struct ArmadoRutina: View {
             .frame(height: 44)
             VStack(alignment: .leading, spacing: 8) {
                 Etiqueta(rutina.plan, color: .berenjena300)
-                Titulo(rutina.nombre, tamano: 40, color: .hueso)
+                Button {
+                    nombreNuevo = rutina.nombre == "Rutina nueva" ? "" : rutina.nombre
+                    renombrar = true
+                } label: {
+                    Titulo(rutina.nombre, tamano: 40, color: .hueso)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Cambiar el nombre")
             }
             .padding(.horizontal, Espacio.margen)
             .padding(.top, 8)

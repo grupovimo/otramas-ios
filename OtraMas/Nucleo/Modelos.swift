@@ -78,6 +78,10 @@ enum EstadoClase: Codable, Hashable {
 
 struct Clase: Codable, Hashable, Identifiable {
     var id: String
+    /// La clase fija de la que sale (nil: clase única) y la fecha «2026-11-26».
+    var fijaId: String? = nil
+    var fecha: String? = nil
+    var recuperan: [String] = []
     var hora: String
     var nombre: String
     var lugar: String
@@ -114,6 +118,14 @@ struct EjercicioDeRutina: Codable, Hashable, Identifiable {
     var kilos: Double
     /// Pausa entre series, en segundos.
     var pausa: Int
+    /// Las «reps» son segundos (plancha, soga…).
+    var porTiempo = false
+    var notas: String? = nil
+
+    var resumen: String {
+        let base = "\(Int(series)) × \(Int(reps))\(porTiempo ? " s" : "")"
+        return kilos > 0 ? "\(base) · \(Formato.decimal(kilos)) kg" : base
+    }
 }
 
 struct DiaRutina: Codable, Hashable, Identifiable {
@@ -122,11 +134,61 @@ struct DiaRutina: Codable, Hashable, Identifiable {
     var ejercicios: [EjercicioDeRutina]
 }
 
+/// A quién se le dio una rutina y desde cuándo.
+struct Asignacion: Codable, Hashable {
+    var alumnoId: String
+    /// «2026-11-02».
+    var desde: String
+}
+
 struct Rutina: Codable, Hashable, Identifiable {
     var id: String
     var nombre: String
+    /// «Fuerza general · 3 días».
     var plan: String
     var dias: [DiaRutina]
+    var objetivo: String = "Fuerza"
+    var nivel: String = "Intermedio"
+    var notas: String? = nil
+    var plantilla = false
+    var archivada = false
+    var asignaciones: [Asignacion] = []
+
+    var cantidadEjercicios: Int { dias.reduce(0) { $0 + $1.ejercicios.count } }
+    var resumen: String {
+        "\(dias.count) \(dias.count == 1 ? "día" : "días") · \(cantidadEjercicios) \(cantidadEjercicios == 1 ? "ejercicio" : "ejercicios")"
+    }
+    /// Ids del catálogo, sin repetir, para las miniaturas.
+    var ejerciciosIds: [String] {
+        var vistos = Set<String>(), out: [String] = []
+        for d in dias { for e in d.ejercicios { if let i = e.ejercicioId, vistos.insert(i).inserted { out.append(i) } } }
+        return out
+    }
+    var link: URL { URL(string: "https://otramas.com.ar/r/\(id)")! }
+}
+
+/// Una clase del horario semanal fijo (se repite cada semana en esos días).
+struct ClaseFija: Codable, Hashable, Identifiable {
+    var id: String
+    var nombre: String
+    /// 1 = lunes … 7 = domingo.
+    var dias: [Int]
+    var hora: String
+    var lugar: String
+    var cupo: Int
+    var inscriptos: [String]
+    var particular: String? = nil
+}
+
+/// Lo que cambió en una fecha puntual de una clase fija.
+struct AjusteClase: Codable, Hashable {
+    var suspendida: String? = nil
+    /// Alumnos anotados a recuperar ese día.
+    var recuperan: [String] = []
+    /// Alumnos que avisaron que faltan.
+    var faltan: [String] = []
+    /// Asistencia tomada (si se pasó lista).
+    var presentes: Set<String>? = nil
 }
 
 struct MedioCobrado: Codable, Hashable {
@@ -161,7 +223,15 @@ struct PanelProfe: Codable, Hashable {
     /// La próxima clase y cuánto falta («en 25 min»).
     var proxima: String
     var proximaEn: String
-    var rutina: Rutina
+    var rutinas: [Rutina]
+    var horario: [ClaseFija]
+    /// Clases sueltas (eventos, clase única) por fecha.
+    var clasesUnicas: [Clase] = []
+    /// Cambios puntuales: clave «<fijaId>@<fecha>».
+    var ajustes: [String: AjusteClase] = [:]
+    var feriados: [String: String] = [:]
+    /// La fecha de «hoy» en la maqueta (martes 24 de noviembre de 2026).
+    var hoyISO: String
 }
 
 // MARK: - Alumno

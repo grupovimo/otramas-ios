@@ -28,6 +28,15 @@ struct Inicio: View {
                         estado.avisar("Les escribimos a los \(estado.profe.resumen.noVienen) por WhatsApp.")
                     }
                 }
+                let sin = estado.sinRutina
+                if !sin.isEmpty {
+                    Divisor()
+                    filaResolver(numero: sin.count, nombre: "Sin rutina", sub: sin.prefix(3).map(\.primerNombre).joined(separator: ", ")) {
+                        Boton(titulo: "Asignar", icono: .pesa, variante: .suave, alto: .chico) {
+                            nav.hoja = .elegirRutina(sin.map(\.id))
+                        }
+                    }
+                }
             }
             if let t = estado.tip(.profe) {
                 TipVista(tip: t).padding(.top, 24)
@@ -60,9 +69,16 @@ struct Inicio: View {
                  + Text(Formato.plata(estado.faltan)).font(Estilo.texto(16, 700).font(dts)).foregroundColor(.yema))
                     .tipo(.texto(16, 400))
                     .padding(.top, 8)
-                Boton(titulo: "Tu mes", iconoDerecha: .der, variante: .osc, alto: .chico,
-                      relleno: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 12)) {
-                    nav.inicio.append(.tuMes)
+                HStack(spacing: 8) {
+                    Boton(titulo: "Tu mes", iconoDerecha: .der, variante: .osc, alto: .chico,
+                          relleno: EdgeInsets(top: 0, leading: 14, bottom: 0, trailing: 10)) {
+                        nav.inicio.append(.tuMes)
+                    }
+                    Boton(titulo: "Semana", icono: .cal, variante: .osc, alto: .chico,
+                          relleno: EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 12)) {
+                        nav.inicio.append(.horario)
+                    }
+                    .accessibilityLabel("Tu semana de clases")
                 }
                 .padding(.top, 12)
             }
@@ -73,7 +89,7 @@ struct Inicio: View {
     }
 
     private func proxima(_ c: Clase) -> some View {
-        Button { nav.ir(.horario) } label: {
+        Button { nav.inicio.append(.horario) } label: {
             Tarjeta(relleno: 16) {
                 HStack(spacing: 16) {
                     Text(c.hora).tipo(.numero(40), alto: 40).foregroundStyle(Color.berenjena800)

@@ -152,30 +152,35 @@ final class Estado {
     }
 
     func suspender(claseId: String, motivo: String, dejarRecuperar: Bool) {
-        guard let i = profe.clases.firstIndex(where: { $0.id == claseId }) else { return }
         Haptico.exito()
-        withAnimation(.snappy) { profe.clases[i].estado = .suspendida(motivo) }
-        let n = profe.clases[i].vienen
+        let n = clase(claseId)?.vienen ?? 0
+        withAnimation(.snappy) {
+            if let i = profe.clases.firstIndex(where: { $0.id == claseId }) {
+                profe.clases[i].estado = .suspendida(motivo)
+            } else if let i = profe.clasesUnicas.firstIndex(where: { $0.id == claseId }) {
+                profe.clasesUnicas[i].estado = .suspendida(motivo)
+            } else {
+                profe.ajustes[claseId, default: AjusteClase()].suspendida = motivo
+            }
+        }
         let datos = self.datos
         Task { try? await datos.suspenderClase(claseId: claseId, motivo: motivo, dejarRecuperar: dejarRecuperar) }
         avisar("Clase suspendida. Les avisamos a los \(n).")
     }
 
     func guardarAsistencia(claseId: String, presentes: Set<String>) {
-        guard let i = profe.clases.firstIndex(where: { $0.id == claseId }) else { return }
         Haptico.exito()
-        profe.clases[i].presentes = presentes
+        let total = clase(claseId)?.inscriptos.count ?? presentes.count
+        if let i = profe.clases.firstIndex(where: { $0.id == claseId }) {
+            profe.clases[i].presentes = presentes
+        } else if let i = profe.clasesUnicas.firstIndex(where: { $0.id == claseId }) {
+            profe.clasesUnicas[i].presentes = presentes
+        } else {
+            profe.ajustes[claseId, default: AjusteClase()].presentes = presentes
+        }
         let datos = self.datos
         Task { try? await datos.guardarAsistencia(claseId: claseId, presentes: presentes) }
-        avisar("Lista guardada: vinieron \(presentes.count) de \(profe.clases[i].inscriptos.count).")
-    }
-
-    func guardarRutina(_ r: Rutina, asignadaA ids: [String] = []) {
-        Haptico.exito()
-        profe.rutina = r
-        let datos = self.datos
-        Task { try? await datos.guardarRutina(r, asignadaA: ids) }
-        avisar(ids.isEmpty ? "Rutina guardada." : "Rutina asignada a \(ids.count) \(ids.count == 1 ? "alumno" : "alumnos").")
+        avisar("Lista guardada: vinieron \(presentes.count) de \(total).")
     }
 
     func crearAlumno(nombre: String, plan: String) {

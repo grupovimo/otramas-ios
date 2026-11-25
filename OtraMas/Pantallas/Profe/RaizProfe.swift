@@ -3,6 +3,15 @@ import SwiftUI
 enum DestinoProfe: Hashable {
     case tuMes
     case ficha(String)
+    case horario
+    case rutina(String)
+}
+
+/// Qué rutina se abre en el armado: una nueva o una existente.
+enum EdicionRutina: Identifiable, Hashable {
+    case nueva
+    case editar(String)
+    var id: String { if case .editar(let r) = self { return r }; return "nueva" }
 }
 
 enum HojaProfe: Identifiable, Hashable {
@@ -10,7 +19,11 @@ enum HojaProfe: Identifiable, Hashable {
     case lista(String)
     case nuevo
     case suspender(String)
-    case asignar
+    case asignarRutina(String, [String])
+    case enviarRutina(String)
+    case pdfRutina(String)
+    case elegirRutina([String])
+    case clase(String)
     case ajustes
     case ejercicios
     case detalle(String)
@@ -21,7 +34,11 @@ enum HojaProfe: Identifiable, Hashable {
         case .lista(let c): return "lista-\(c)"
         case .nuevo: return "nuevo"
         case .suspender(let c): return "suspender-\(c)"
-        case .asignar: return "asignar"
+        case .asignarRutina(let r, let a): return "asignar-\(r)-\(a.joined())"
+        case .enviarRutina(let r): return "enviar-\(r)"
+        case .pdfRutina(let r): return "pdf-\(r)"
+        case .elegirRutina(let a): return "elegir-\(a.joined())"
+        case .clase(let c): return "clase-\(c)"
         case .ajustes: return "ajustes"
         case .ejercicios: return "ejercicios"
         case .detalle(let e): return "detalle-\(e)"
@@ -36,10 +53,10 @@ final class NavProfe {
     var pestana: PestanaProfe = .inicio
     var inicio: [DestinoProfe] = []
     var cuotas: [DestinoProfe] = []
-    var horario: [DestinoProfe] = []
+    var rutinas: [DestinoProfe] = []
     var alumnos: [DestinoProfe] = []
     var hoja: HojaProfe?
-    var rutinaAbierta = false
+    var edicion: EdicionRutina?
     var menuAbierto = false
 
     func ir(_ p: PestanaProfe) {
@@ -57,7 +74,7 @@ final class NavProfe {
         switch p {
         case .inicio: inicio = []
         case .cuotas: cuotas = []
-        case .horario: horario = []
+        case .rutinas: rutinas = []
         case .alumnos: alumnos = []
         }
     }
@@ -77,8 +94,8 @@ struct RaizProfe: View {
                     NavigationStack(path: $nav.inicio) { Inicio().destinos() }
                 case .cuotas:
                     NavigationStack(path: $nav.cuotas) { Cuotas().destinos() }
-                case .horario:
-                    NavigationStack(path: $nav.horario) { Horario().destinos() }
+                case .rutinas:
+                    NavigationStack(path: $nav.rutinas) { ListaRutinas().destinos() }
                 case .alumnos:
                     NavigationStack(path: $nav.alumnos) { ListaAlumnos().destinos() }
                 }
@@ -115,7 +132,11 @@ struct RaizProfe: View {
             case .lista(let id): HojaPasarLista(claseId: id)
             case .nuevo: HojaAlumnoNuevo()
             case .suspender(let id): HojaSuspender(claseId: id)
-            case .asignar: HojaAsignar()
+            case .asignarRutina(let r, let a): HojaAsignarRutina(rutinaId: r, preelegidos: a)
+            case .enviarRutina(let r): HojaEnviarRutina(rutinaId: r)
+            case .pdfRutina(let r): HojaPDFRutina(rutinaId: r)
+            case .elegirRutina(let a): HojaElegirRutina(alumnoIds: a)
+            case .clase(let c): HojaClase(claseId: c)
             case .ajustes: Ajustes()
             case .ejercicios: NavigationStack { Biblioteca(volver: "Cerrar") }
             case .detalle(let id):
@@ -124,8 +145,11 @@ struct RaizProfe: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $nav.rutinaAbierta) {
-            ArmadoRutina()
+        .fullScreenCover(item: $nav.edicion) { e in
+            ArmadoRutina(rutina: {
+                if case .editar(let id) = e, let r = estado.rutina(id) { return r }
+                return estado.rutinaNueva()
+            }())
                 .environment(estado)
                 .environment(nav)
         }
@@ -139,11 +163,16 @@ struct RaizProfe: View {
         case .menu: nav.pestana = .inicio; nav.menuAbierto = true
         case .tumes: nav.pestana = .inicio; nav.inicio = [.tuMes]
         case .cuotas: nav.pestana = .cuotas
-        case .horario: nav.pestana = .horario
-        case .suspender: nav.pestana = .horario; nav.hoja = .suspender("c3")
+        case .horario: nav.pestana = .inicio; nav.inicio = [.horario]
+        case .suspender: nav.pestana = .inicio; nav.inicio = [.horario]; nav.hoja = .suspender("c3")
+        case .rutinas: nav.pestana = .rutinas
+        case .rutinaDetalle: nav.pestana = .rutinas; nav.rutinas = [.rutina("r1")]
+        case .asignar: nav.pestana = .rutinas; nav.rutinas = [.rutina("r1")]; nav.hoja = .asignarRutina("r1", ["martina", "ezequiel", "ramiro"])
+        case .enviar: nav.pestana = .rutinas; nav.rutinas = [.rutina("r1")]; nav.hoja = .enviarRutina("r1")
+        case .pdf: nav.pestana = .rutinas; nav.rutinas = [.rutina("r1")]; nav.hoja = .pdfRutina("r1")
         case .alumnos: nav.pestana = .alumnos
         case .ficha: nav.abrirFicha("carla")
-        case .rutina: nav.rutinaAbierta = true
+        case .rutina: nav.edicion = .editar("r1")
         case .cobrar: nav.hoja = .cobrar(nil)
         case .lista: nav.hoja = .lista("c1")
         case .nuevo: nav.hoja = .nuevo
@@ -161,6 +190,8 @@ private struct Destinos: ViewModifier {
             switch d {
             case .tuMes: TuMes()
             case .ficha(let id): FichaAlumno(alumnoId: id)
+            case .horario: Horario(apilada: true)
+            case .rutina(let id): DetalleRutina(rutinaId: id)
             }
         }
     }

@@ -54,7 +54,19 @@ final class PantallasTests: XCTestCase {
     func testCobrarUno() { montar(HojaCobrar(alumnoId: "martina")) }
     func testPasarLista() { montar(HojaPasarLista(claseId: "c1")) }
     func testAlumnoNuevo() { montar(HojaAlumnoNuevo()) }
-    func testAsignar() { montar(HojaAsignar()) }
+    func testRutinas() { montar(NavigationStack { ListaRutinas() }) }
+    func testDetalleRutina() { montar(NavigationStack { DetalleRutina(rutinaId: "r1") }) }
+    func testDetallePlantilla() { montar(NavigationStack { DetalleRutina(rutinaId: "p-hipertrofia") }) }
+    func testDetalleRutinaInexistente() { montar(NavigationStack { DetalleRutina(rutinaId: "nada") }) }
+    func testAsignarRutina() { montar(HojaAsignarRutina(rutinaId: "r1", preelegidos: ["martina"])) }
+    func testEnviarRutina() { montar(HojaEnviarRutina(rutinaId: "r1")) }
+    func testEnviarSinAsignar() { montar(HojaEnviarRutina(rutinaId: "p-pilates")) }
+    func testPDFRutina() { montar(HojaPDFRutina(rutinaId: "r1"), segundos: 1.5) }
+    func testElegirRutina() { montar(HojaElegirRutina(alumnoIds: ["martina", "ezequiel", "ramiro"])) }
+    func testArmadoNueva() { montar(ArmadoRutina(rutina: Estado().rutinaNueva())) }
+    func testHorarioApilado() { montar(NavigationStack { Horario(apilada: true) }) }
+    func testHojaClase() { montar(HojaClase(claseId: "fm@2026-11-26")) }
+    func testNuevaClase() { montar(HojaNuevaClase(fecha: "2026-11-29")) }
 
     // Alumno
     func testRaizAlumno() { montar(RaizAlumno(arranque: .hoy)) }
@@ -124,6 +136,77 @@ final class PantallasTests: XCTestCase {
         XCTAssertEqual(e.porcentajeAlDia, 83)
         XCTAssertEqual(Formato.plata(e.profe.resumen.cobrado), "$1.260.000")
         XCTAssertEqual(Formato.plata(e.faltan), "$252.000")
+    }
+
+    func testRutinasYAsignaciones() {
+        let e = Estado()
+        let ids = Set(DatosDeMuestra.ejercicios.map(\.id))
+        XCTAssertGreaterThanOrEqual(e.plantillas.count, 8)
+        for r in e.profe.rutinas { for d in r.dias { for x in d.ejercicios { XCTAssertTrue(ids.contains(x.ejercicioId ?? ""), "\(r.nombre): \(x.nombre)") } } }
+        XCTAssertEqual(e.sinRutina.map(\.id).sorted(), ["ezequiel", "martina", "ramiro"])
+        // Asignar una plantilla la copia a Mías y reemplaza la rutina anterior.
+        let antes = e.rutinasMias.count
+        let rid = e.asignar(rutina: "p-gluteos", a: ["martina", "carla"], desde: "2026-11-30", reemplaza: true)
+        XCTAssertEqual(e.rutinasMias.count, antes + 1)
+        XCTAssertEqual(e.rutinaActual(de: "carla")?.rutina.id, rid)
+        XCTAssertFalse(e.rutina("r1")!.asignaciones.contains { $0.alumnoId == "carla" })
+        XCTAssertEqual(e.sinRutina.count, 2)
+        // Duplicar y archivar.
+        let copia = e.duplicar(rutina: "r1")!
+        XCTAssertEqual(e.rutina(copia)?.nombre, "Piernas y zona media (copia)")
+        e.archivar(rutina: copia)
+        XCTAssertTrue(e.rutinasArchivadas.contains { $0.id == copia })
+        // Una nueva al guardarse va a Mías.
+        var nueva = e.rutinaNueva(); nueva.nombre = "Core express"
+        e.guardar(rutina: nueva)
+        XCTAssertEqual(e.rutinasMias.first?.nombre, "Core express")
+    }
+
+    /// El bug de Horario: ningún día con clases puede quedar vacío (pasado, hoy, futuro, otro mes).
+    func testHorarioTreintaDias() {
+        let e = Estado()
+        for k in -10..<30 {
+            let iso = Fecha.sumar(k, a: e.hoy)
+            let clases = e.clases(en: iso)
+            let d = Fecha.diaSemana(iso)
+            if e.feriado(iso) != nil || d == 7 {
+                XCTAssertTrue(clases.isEmpty, iso)
+            } else {
+                XCTAssertFalse(clases.isEmpty, "\(iso) quedó vacío")
+                for c in clases {
+                    XCTAssertFalse(c.inscriptos.isEmpty, "\(iso) \(c.nombre) sin alumnos")
+                    XCTAssertNotNil(e.clase(c.id), c.id)
+                    if iso < e.hoy { XCTAssertEqual(c.estado, .termino, iso) }
+                    if iso > e.hoy { XCTAssertGreaterThan(c.vienen, 0, iso) }
+                }
+            }
+        }
+        // Suspender y anotar en una fecha futura.
+        let id = "ft@2026-11-26"
+        e.anotar("ramiro", en: id)
+        XCTAssertTrue(e.clase(id)!.presentes.contains("ramiro"))
+        e.suspender(claseId: id, motivo: "Lluvia", dejarRecuperar: true)
+        XCTAssertEqual(e.clase(id)?.estado, .suspendida("Lluvia"))
+    }
+
+    func testPDFReal() throws {
+        let e = Estado()
+        let r = e.rutina("r1")!
+        let url = try XCTUnwrap(PDFRutina.generar(r, profe: "Lucía", sexo: .mujer, ejercicios: e.ejercicios))
+        let datos = try Data(contentsOf: url)
+        XCTAssertTrue(datos.starts(with: Array("%PDF".utf8)))
+        XCTAssertGreaterThan(datos.count, 20_000)
+        // Una muestra para revisar a mano (sólo si existe la carpeta del repo).
+        let capturas = URL(fileURLWithPath: "/Users/nahuelsantillan/Trabajo/vimo/otramas-ios/capturas")
+        if FileManager.default.fileExists(atPath: capturas.path) {
+            let destino = capturas.appendingPathComponent("rutina.pdf")
+            try? FileManager.default.removeItem(at: destino)
+            try? FileManager.default.copyItem(at: url, to: destino)
+            let largo = try XCTUnwrap(PDFRutina.generar(e.rutina("p-hipertrofia")!, profe: "Lucía", sexo: .hombre, ejercicios: e.ejercicios))
+            let d2 = capturas.appendingPathComponent("rutina-hipertrofia.pdf")
+            try? FileManager.default.removeItem(at: d2)
+            try? FileManager.default.copyItem(at: largo, to: d2)
+        }
     }
 
     func testListoAvanzaLaSerie() {

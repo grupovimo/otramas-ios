@@ -18,7 +18,12 @@ protocol Datos: Sendable {
     func recordarDeudas(alumnoIds: [String]) async throws
     func suspenderClase(claseId: String, motivo: String, dejarRecuperar: Bool) async throws
     func guardarAsistencia(claseId: String, presentes: Set<String>) async throws
-    func guardarRutina(_ rutina: Rutina, asignadaA alumnoIds: [String]) async throws
+    func guardarRutina(_ rutina: Rutina) async throws
+    func asignarRutina(rutinaId: String, alumnoIds: [String], desde: String, reemplaza: Bool) async throws
+    func archivarRutina(id: String, archivada: Bool) async throws
+    func enviarRutina(id: String, alumnoIds: [String]) async throws
+    func anotarEnClase(claseId: String, alumnoId: String) async throws
+    func crearClase(_ clase: ClaseFija, unica fecha: String?) async throws
     func crearAlumno(nombre: String, plan: String) async throws -> Alumno
 
     // Alumno
@@ -38,7 +43,12 @@ struct DatosDeMuestra: Datos {
     func recordarDeudas(alumnoIds: [String]) async throws {}
     func suspenderClase(claseId: String, motivo: String, dejarRecuperar: Bool) async throws {}
     func guardarAsistencia(claseId: String, presentes: Set<String>) async throws {}
-    func guardarRutina(_ rutina: Rutina, asignadaA alumnoIds: [String]) async throws {}
+    func guardarRutina(_ rutina: Rutina) async throws {}
+    func asignarRutina(rutinaId: String, alumnoIds: [String], desde: String, reemplaza: Bool) async throws {}
+    func archivarRutina(id: String, archivada: Bool) async throws {}
+    func enviarRutina(id: String, alumnoIds: [String]) async throws {}
+    func anotarEnClase(claseId: String, alumnoId: String) async throws {}
+    func crearClase(_ clase: ClaseFija, unica fecha: String?) async throws {}
     func crearAlumno(nombre: String, plan: String) async throws -> Alumno {
         Alumno(id: UUID().uuidString, nombre: nombre, tono: .berenjena, plan: plan, horario: "a definir",
                cuota: .alDia, asistencias: 0, clasesDelMes: 0, racha: 0, progreso: nil, pasos: nil, ultimaVez: 0)
