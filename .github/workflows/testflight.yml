@@ -1,0 +1,94 @@
+# Compila la maqueta de Otra Más, corre los tests de humo, la firma y la sube a TestFlight.
+# Sólo llega al grupo interno «Equipo» (Nahuel): esta app no tiene grupos externos.
+# Se corre con cada push a main o a mano (gh workflow run testflight). Número de build: AAMMDDhhmm de Argentina.
+name: testflight
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  subir:
+    runs-on: ${{ vars.RUNNER_MAC || 'macos-15-intel' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.3'
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Tests en el simulador
+        run: |
+          set -o pipefail
+          SIM=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*' | sed 's/ *$//')
+          xcodebuild -project OtraMas.xcodeproj -scheme OtraMas -configuration Debug \
+            -destination "platform=iOS Simulator,name=$SIM" CODE_SIGNING_ALLOWED=NO \
+            test | tee test.log | xcbeautify --renderer github-actions
+      - name: Clave de App Store Connect, certificado y perfil
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          DIST_P12: ${{ secrets.DIST_P12 }}
+          DIST_P12_CLAVE: ${{ secrets.DIST_P12_CLAVE }}
+          PERFIL_APP: ${{ secrets.PERFIL_APP }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/clave.p8"
+          printf '%s' "$DIST_P12" | base64 --decode > "$RUNNER_TEMP/asc/dist.p12"
+          LL="$RUNNER_TEMP/firma.keychain-db"
+          CL=$(openssl rand -hex 16)
+          security create-keychain -p "$CL" "$LL"
+          security set-keychain-settings -lut 21600 "$LL"
+          security unlock-keychain -p "$CL" "$LL"
+          security import "$RUNNER_TEMP/asc/dist.p12" -P "$DIST_P12_CLAVE" -A -t cert -f pkcs12 -k "$LL"
+          security set-key-partition-list -S apple-tool:,apple: -k "$CL" "$LL" > /dev/null
+          security list-keychains -d user -s "$LL" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/asc/dist.p12"
+          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$d"
+            printf '%s' "$PERFIL_APP" | base64 --decode > "$d/otramas-appstore.mobileprovision"
+          done
+      - name: Archive firmado
+        run: |
+          set -o pipefail
+          NUMERO=$(TZ=America/Argentina/Buenos_Aires date +%y%m%d%H%M)
+          xcodebuild -project OtraMas.xcodeproj -scheme OtraMas -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/OtraMas.xcarchive" \
+            CURRENT_PROJECT_VERSION=$NUMERO DEVELOPMENT_TEAM=M6935MSNQB \
+            archive | tee archive.log | xcbeautify --renderer github-actions
+      - name: Subir a TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/exportar.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>M6935MSNQB</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key><dict>
+              <key>ar.com.otramas.app</key><string>ar.com.otramas.app App Store</string>
+            </dict>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/OtraMas.xcarchive" \
+            -exportPath "$RUNNER_TEMP/exportado" -exportOptionsPlist "$RUNNER_TEMP/exportar.plist" \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/clave.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            | tee exportar.log | xcbeautify --renderer github-actions
+      - if: failure()
+        run: grep -hE 'error:|Error|No profiles|provisioning' test.log archive.log exportar.log 2>/dev/null | sort -u | head -80
+      - if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/asc" ~/Library/MobileDevice/Provisioning\ Profiles/otramas-*.mobileprovision
+          security delete-keychain "$RUNNER_TEMP/firma.keychain-db" 2>/dev/null || true

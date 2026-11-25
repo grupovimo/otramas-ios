@@ -1,0 +1,278 @@
+import Foundation
+
+// Modelos de Otra Más. Son valores simples (Codable) para que mañana los llene la API sin tocar las pantallas.
+
+enum Lado: String, Codable, CaseIterable {
+    case profe, alumno
+}
+
+struct Profe: Codable, Hashable {
+    var nombre: String
+    var foto: String
+    var alias: String
+}
+
+enum TonoAvatar: String, Codable, Hashable { case berenjena, yema, arena, yemaFuerte }
+
+enum EstadoCuota: Codable, Hashable {
+    case alDia
+    case porConfirmar(Comprobante)
+    case debe(Deuda)
+}
+
+/// Comprobante de transferencia que mandó el alumno y la profe tiene que confirmar.
+struct Comprobante: Codable, Hashable, Identifiable {
+    var id: String
+    var monto: Int
+    /// «hoy 7:12», «ayer 21:40».
+    var cuando: String
+}
+
+struct Deuda: Codable, Hashable {
+    var monto: Int
+    var dias: Int
+}
+
+/// Lo que se ve de un ejercicio en la ficha (la línea de progreso).
+struct Progreso: Codable, Hashable {
+    var ejercicio: String
+    var actual: Double
+    var valores: [Double]
+    var meses: [String]
+    var desde: String
+}
+
+struct Alumno: Codable, Hashable, Identifiable {
+    var id: String
+    var nombre: String
+    var tono: TonoAvatar
+    var plan: String
+    var horario: String
+    var cuota: EstadoCuota
+    var asistencias: Int
+    var clasesDelMes: Int
+    var racha: Int
+    var progreso: Progreso?
+    /// Pasos por día de los últimos 7 días (Apple Salud), si los comparte.
+    var pasos: [Double]?
+    var ultimaVez: Int
+
+    var iniciales: String {
+        nombre.split(separator: " ").prefix(2).compactMap { $0.first.map(String.init) }.joined()
+    }
+
+    var primerNombre: String { String(nombre.split(separator: " ").first ?? "") }
+}
+
+enum MedioPago: String, Codable, CaseIterable, Hashable {
+    case transferencia = "Transferencia"
+    case efectivo = "Efectivo"
+    case mercadoPago = "Mercado Pago"
+}
+
+enum EstadoClase: Codable, Hashable {
+    case termino
+    case falta(String)
+    case suspendida(String)
+}
+
+struct Clase: Codable, Hashable, Identifiable {
+    var id: String
+    var hora: String
+    var nombre: String
+    var lugar: String
+    var estado: EstadoClase
+    var cupo: Int
+    /// Ids de los inscriptos y de los que vienen (o vinieron).
+    var inscriptos: [String]
+    var presentes: Set<String>
+    /// Clase particular: el alumno.
+    var particular: String?
+
+    var vienen: Int { presentes.count }
+}
+
+struct DiaSemana: Codable, Hashable, Identifiable {
+    var id: Int { numero }
+    var corto: String
+    var numero: Int
+    var feriado = false
+    var conClases = true
+}
+
+struct EjercicioDeRutina: Codable, Hashable, Identifiable {
+    var id: String
+    /// El ejercicio de la biblioteca (para la ilustración).
+    var ejercicioId: String? = nil
+    var nombre: String
+    var foto: String
+    /// Punto de foco de la foto (el object-position del diseño), de 0 a 1.
+    var focoX: Double
+    var focoY: Double
+    var series: Double
+    var reps: Double
+    var kilos: Double
+    /// Pausa entre series, en segundos.
+    var pausa: Int
+}
+
+struct DiaRutina: Codable, Hashable, Identifiable {
+    var id: String
+    var nombre: String
+    var ejercicios: [EjercicioDeRutina]
+}
+
+struct Rutina: Codable, Hashable, Identifiable {
+    var id: String
+    var nombre: String
+    var plan: String
+    var dias: [DiaRutina]
+}
+
+struct MedioCobrado: Codable, Hashable {
+    var medio: MedioPago
+    var cuotas: Int
+}
+
+struct ResumenMes: Codable, Hashable {
+    var mes: String
+    var mesAnterior: String
+    var cobrado: Int
+    var variacion: Int
+    /// En miles de pesos, de junio a noviembre (el último va por la mitad).
+    var ingresos: [Double]
+    var meses: [String]
+    var alumnosActivos: Int
+    var asistencia: Int
+    var nuevos: Int
+    var medios: [MedioCobrado]
+    var noVienen: Int
+}
+
+struct PanelProfe: Codable, Hashable {
+    var profe: Profe
+    var fecha: String
+    var hora: String
+    var alumnos: [Alumno]
+    var resumen: ResumenMes
+    var semana: [DiaSemana]
+    var hoy: Int
+    var clases: [Clase]
+    /// La próxima clase y cuánto falta («en 25 min»).
+    var proxima: String
+    var proximaEn: String
+    var rutina: Rutina
+}
+
+// MARK: - Alumno
+
+struct EjercicioSesion: Codable, Hashable, Identifiable {
+    var id: String
+    /// El ejercicio de la biblioteca (para la ilustración).
+    var ejercicioId: String? = nil
+    var nombre: String
+    var foto: String
+    var series: Int
+    var kilos: Double
+    var reps: Int
+    var anterior: Double
+    /// Descanso entre series, en segundos.
+    var descanso: Int
+}
+
+struct SesionHoy: Codable, Hashable {
+    var ejercicios: [EjercicioSesion]
+    var actual: Int
+    /// Series ya hechas del ejercicio actual.
+    var hechas: Int
+    /// Segundos que le quedan al descanso en curso.
+    var descansoRestante: Int
+}
+
+struct Medalla: Codable, Hashable, Identifiable {
+    var id: String { titulo }
+    var iconoNombre: String
+    var titulo: String
+    var ganada: Bool
+    var deRacha = false
+}
+
+struct Record: Codable, Hashable {
+    var kilos: Double
+    var ejercicio: String
+    var cuando: String
+    var valores: [Double]
+    var meses: [String]
+}
+
+struct Logros: Codable, Hashable {
+    var rachaSemanas: Int
+    var semanaHechas: Int
+    var semanaMeta: Int
+    var pasosHoy: Int
+    var pasosMeta: Int
+    var record: Record
+    var medallas: [Medalla]
+}
+
+struct ProximaClase: Codable, Hashable {
+    var diaCorto: String
+    var dia: Int
+    var hora: String
+    var lugar: String
+}
+
+struct PlanAlumno: Codable, Hashable {
+    var nombre: String
+    var clasesTotal: Int
+    var clasesUsadas: Int
+    var mes: String
+    var vence: String
+    var proxima: ProximaClase
+    var avisoFalta: Bool
+    var paraRecuperar: Int
+    var recuperarHasta: String
+    var proximoMes: String
+    var proximoMonto: Int
+    var alias: String
+}
+
+struct PanelAlumno: Codable, Hashable {
+    var nombre: String
+    var profe: String
+    var fotoProfe: String
+    var sesion: SesionHoy
+    var logros: Logros
+    var plan: PlanAlumno
+}
+
+// MARK: - Formato
+
+enum Formato {
+    /// $1.215.000 (es-AR).
+    static func plata(_ n: Int) -> String {
+        "$" + miles(n)
+    }
+
+    static func miles(_ n: Int) -> String {
+        let s = String(abs(n))
+        var out = ""
+        for (i, c) in s.reversed().enumerated() {
+            if i > 0 && i % 3 == 0 { out.append(".") }
+            out.append(c)
+        }
+        return (n < 0 ? "-" : "") + String(out.reversed())
+    }
+
+    /// 47,5 · 50 (coma decimal, sin ceros de más).
+    static func decimal(_ v: Double) -> String {
+        if v == v.rounded() { return String(Int(v)) }
+        return String(format: "%.1f", v).replacingOccurrences(of: ".", with: ",")
+    }
+
+    static func reloj(_ segundos: Int) -> String {
+        String(format: "%d:%02d", max(segundos, 0) / 60, max(segundos, 0) % 60)
+    }
+
+    static func pausa(_ s: Int) -> String { s < 120 ? "\(s) s" : "\(s / 60) min" }
+}
