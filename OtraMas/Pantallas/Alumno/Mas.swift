@@ -59,6 +59,7 @@ struct MasAlumno: View {
                     fila(.perfil, .gente, "Tu perfil", "Tus datos y Apple Salud")
                 }
                 if let t = estado.tip(.alumno, salto: 3) { TipVista(tip: t).padding(.top, 24) }
+                BannerGrupo(.deAPoco)
             }
             .navigationDestination(for: DestinoAlumno.self) { d in
                 switch d {

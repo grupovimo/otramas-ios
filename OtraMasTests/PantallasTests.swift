@@ -203,6 +203,34 @@ final class PantallasTests: XCTestCase {
         XCTAssertEqual(g.suscripcion.pruebaHasta, "2026-12-08")
     }
 
+    // Banners de Grupo Vimo
+    func testBanners() {
+        for p in PromoGrupo.allCases {
+            UserDefaults.standard.removeObject(forKey: "banner-\(p.rawValue)")
+            montar(ScrollView { BannerGrupo(p) }, segundos: 0.3)
+        }
+        // Muestra de los tres, a 390 de ancho, para revisar a mano.
+        let muestra = VStack(spacing: 0) { ForEach(PromoGrupo.allCases, id: \.self) { BannerGrupo($0) } }
+            .padding(.horizontal, 20).padding(.bottom, 20).frame(width: 390).background(Color.hueso).environment(Estado())
+        let r = ImageRenderer(content: muestra)
+        r.scale = 3
+        let carpeta = URL(fileURLWithPath: "/Users/nahuelsantillan/Trabajo/vimo/otramas-ios/capturas")
+        if FileManager.default.fileExists(atPath: carpeta.path), let png = r.uiImage?.pngData() {
+            try? png.write(to: carpeta.appendingPathComponent("banners-grupo.png"))
+        }
+    }
+
+    func testBannerCerradoNoVuelvePor30Dias() {
+        let clave = "banner-\(PromoGrupo.deAPoco.rawValue)"
+        UserDefaults.standard.set(Date().timeIntervalSince1970 - 29 * 24 * 3600, forKey: clave)
+        let r = ImageRenderer(content: BannerGrupo(.deAPoco).environment(Estado()).frame(width: 390))
+        XCTAssertEqual(r.uiImage?.size.height ?? 0, 0, accuracy: 1, "cerrado hace 29 días: no se muestra")
+        UserDefaults.standard.set(Date().timeIntervalSince1970 - 31 * 24 * 3600, forKey: clave)
+        let r2 = ImageRenderer(content: BannerGrupo(.deAPoco).environment(Estado()).frame(width: 390))
+        XCTAssertGreaterThan(r2.uiImage?.size.height ?? 0, 60, "a los 31 días vuelve")
+        UserDefaults.standard.removeObject(forKey: clave)
+    }
+
     func testHojaClase() { montar(HojaClase(claseId: "fm@2026-11-26")) }
     func testNuevaClase() { montar(HojaNuevaClase(fecha: "2026-11-29")) }
 

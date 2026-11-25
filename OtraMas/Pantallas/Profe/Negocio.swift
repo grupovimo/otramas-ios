@@ -33,6 +33,7 @@ struct Herramientas: View {
             tile(.sube, "Tu mes", "\(estado.enRiesgo.count) en riesgo") { nav.inicio.append(.tuMes) }
             tile(.puntos, "Ajustes", "Cobro, avisos, apps") { nav.inicio.append(.ajustes) }
         }
+        BannerGrupo(.laColumna)
     }
 
     private func tile(_ i: Icono, _ t: String, _ s: String, _ a: @escaping () -> Void) -> some View {
@@ -587,6 +588,7 @@ struct AjustesProfe: View {
                 Divisor()
                 fila(.wa, "Avisos", "Plantillas e historial") { nav.inicio.append(.avisos) }
             }
+            BannerGrupo(.bancamos)
             TituloSeccion("Notificaciones")
             Tarjeta {
                 ForEach(Array(estado.profe.notificaciones.keys.sorted().enumerated()), id: \.element) { i, k in
