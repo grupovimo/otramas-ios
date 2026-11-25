@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// La foto propia: tocarla abre Ajustes; dejarla apretada ofrece cambiar de lado o rehacer el inicio.
+/// La foto propia: tocarla abre «Tu perfil» (el profe, con Ajustes adentro) o Ajustes (el alumno); dejarla apretada ofrece cambiar de lado o rehacer el inicio.
 struct CambiarLado: ViewModifier {
     @Environment(Estado.self) private var estado
     @AppStorage("lado") private var lado = ""
@@ -16,7 +16,7 @@ struct CambiarLado: ViewModifier {
                 preguntar = true
             }
             .accessibilityAddTraits(.isButton)
-            .accessibilityAction(named: "Ajustes") { ajustes = true }
+            .accessibilityAction(named: lado == Lado.profe.rawValue ? "Tu perfil" : "Ajustes") { ajustes = true }
             .accessibilityAction(named: "Cambiar de lado") { preguntar = true }
             .confirmationDialog("¿Cambiar de lado?", isPresented: $preguntar, titleVisibility: .visible) {
                 Button(lado == Lado.profe.rawValue ? "Ver la app del alumno" : "Ver la app del profe") {
@@ -27,7 +27,9 @@ struct CambiarLado: ViewModifier {
                 Button("Rehacer el inicio") { withAnimation { estado.borrarPerfil(); lado = "" } }
                 Button("Cancelar", role: .cancel) {}
             }
-            .sheet(isPresented: $ajustes) { Ajustes() }
+            .sheet(isPresented: $ajustes) {
+                if lado == Lado.profe.rawValue { TuPerfil() } else { Ajustes() }
+            }
     }
 }
 

@@ -11,6 +11,8 @@ protocol Datos: Sendable {
 
     // Perfil (lo del onboarding)
     func guardarPerfil(_ perfil: Perfil) async throws
+    func perfilProfe() async throws -> PerfilProfe
+    func guardarPerfilProfe(_ perfil: PerfilProfe) async throws
 
     // Profe
     func confirmarComprobante(alumnoId: String, comprobanteId: String) async throws
@@ -38,6 +40,8 @@ struct DatosDeMuestra: Datos {
     func ejercicios() async throws -> [Ejercicio] { Self.ejercicios }
     func tips(para lado: Lado) async throws -> [Tip] { lado == .profe ? Self.tipsProfe : Self.tipsAlumno }
     func guardarPerfil(_ perfil: Perfil) async throws {}
+    func perfilProfe() async throws -> PerfilProfe { Self.perfilLucia }
+    func guardarPerfilProfe(_ perfil: PerfilProfe) async throws {}
     func confirmarComprobante(alumnoId: String, comprobanteId: String) async throws {}
     func registrarCobro(alumnoId: String, monto: Int, medio: MedioPago) async throws {}
     func recordarDeudas(alumnoIds: [String]) async throws {}

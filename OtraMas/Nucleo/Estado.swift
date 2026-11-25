@@ -13,6 +13,8 @@ final class Estado {
     var aviso: String?
     /// Lo que se respondió en el onboarding (nil: todavía no se hizo).
     var perfil: Perfil?
+    /// El perfil profesional del profe (su página pública).
+    var perfilProfe: PerfilProfe = DatosDeMuestra.perfilLucia
     var ejercicios: [Ejercicio] = DatosDeMuestra.ejercicios
     var tipsProfe: [Tip] = DatosDeMuestra.tipsProfe
     var tipsAlumno: [Tip] = DatosDeMuestra.tipsAlumno
@@ -29,6 +31,7 @@ final class Estado {
         if let p = try? await datos.panelProfe() { profe = p }
         if let a = try? await datos.panelAlumno() { alumno = a }
         if let e = try? await datos.ejercicios() { ejercicios = e }
+        if let p = try? await datos.perfilProfe() { perfilProfe = p }
         if let t = try? await datos.tips(para: .profe) { tipsProfe = t }
         if let t = try? await datos.tips(para: .alumno) { tipsAlumno = t }
     }
@@ -42,6 +45,20 @@ final class Estado {
         if p.lado == .profe && !p.primerNombre.isEmpty { profe.profe.nombre = p.primerNombre }
         let datos = self.datos
         Task { try? await datos.guardarPerfil(p) }
+    }
+
+    func guardar(perfilProfe p: PerfilProfe, aviso: String? = "Perfil guardado.") {
+        perfilProfe = p
+        let datos = self.datos
+        Task { try? await datos.guardarPerfilProfe(p) }
+        if let aviso { Haptico.exito(); avisar(aviso) }
+    }
+
+    /// Lo que se calcula solo para el perfil: años, alumnos activos y clases dadas.
+    var logrosProfe: (anios: Int, alumnos: Int, clases: Int) {
+        let anios = max(1, 2026 - perfilProfe.desde)
+        let porSemana = profe.horario.reduce(0) { $0 + $1.dias.count }
+        return (anios, profe.alumnos.count, anios * 46 * max(porSemana, 1))
     }
 
     func borrarPerfil() {

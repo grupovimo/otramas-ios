@@ -139,7 +139,7 @@ struct Encabezado: View {
             Spacer(minLength: 0)
             FotoRedonda(nombre: foto, tamano: 44)
                 .cambiaDeLado()
-                .accessibilityLabel("Tu foto. Tocala para ajustes; dejala apretada para cambiar de lado.")
+                .accessibilityLabel("Tu foto. Tocala para ver tu perfil; dejala apretada para cambiar de lado.")
                 .accessibilityHidden(false)
         }
         .padding(.horizontal, Espacio.margen)

@@ -24,6 +24,7 @@ enum HojaProfe: Identifiable, Hashable {
     case pdfRutina(String)
     case elegirRutina([String])
     case clase(String)
+    case perfil(DestinoPerfil?, Bool)
     case ajustes
     case ejercicios
     case detalle(String)
@@ -39,6 +40,7 @@ enum HojaProfe: Identifiable, Hashable {
         case .pdfRutina(let r): return "pdf-\(r)"
         case .elegirRutina(let a): return "elegir-\(a.joined())"
         case .clase(let c): return "clase-\(c)"
+        case .perfil(let d, let q): return "perfil-\(String(describing: d))-\(q)"
         case .ajustes: return "ajustes"
         case .ejercicios: return "ejercicios"
         case .detalle(let e): return "detalle-\(e)"
@@ -137,6 +139,7 @@ struct RaizProfe: View {
             case .pdfRutina(let r): HojaPDFRutina(rutinaId: r)
             case .elegirRutina(let a): HojaElegirRutina(alumnoIds: a)
             case .clase(let c): HojaClase(claseId: c)
+            case .perfil(let d, let q): TuPerfil(inicial: d, qr: q)
             case .ajustes: Ajustes()
             case .ejercicios: NavigationStack { Biblioteca(volver: "Cerrar") }
             case .detalle(let id):
@@ -177,6 +180,10 @@ struct RaizProfe: View {
         case .lista: nav.hoja = .lista("c1")
         case .nuevo: nav.hoja = .nuevo
         case .ajustes: nav.hoja = .ajustes
+        case .perfil: nav.hoja = .perfil(nil, false)
+        case .editarPerfil: nav.hoja = .perfil(.seccion(.basicos), false)
+        case .asiTeVen: nav.hoja = .perfil(.asiTeVen, false)
+        case .qr: nav.hoja = .perfil(nil, true)
         case .ejercicios: nav.hoja = .ejercicios
         case .ejercicio: nav.hoja = .detalle("sentadilla-goblet")
         default: break

@@ -83,6 +83,7 @@ enum Arranque: String, CaseIterable {
     case onboarding, carga
     case inicio, menu, tumes, cuotas, horario, suspender, alumnos, ficha, rutina, cobrar, lista, nuevo, ajustes, ejercicios, ejercicio
     case rutinas, rutinaDetalle = "rutina-detalle", asignar, enviar, pdf
+    case perfil, editarPerfil = "editar-perfil", asiTeVen = "asi-te-ven", qr
     case hoy, logros, miplan
 
     static var actual: Arranque? {

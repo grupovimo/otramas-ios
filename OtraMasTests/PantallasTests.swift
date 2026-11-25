@@ -65,6 +65,20 @@ final class PantallasTests: XCTestCase {
     func testElegirRutina() { montar(HojaElegirRutina(alumnoIds: ["martina", "ezequiel", "ramiro"])) }
     func testArmadoNueva() { montar(ArmadoRutina(rutina: Estado().rutinaNueva())) }
     func testHorarioApilado() { montar(NavigationStack { Horario(apilada: true) }) }
+    func testTuPerfil() { montar(TuPerfil()) }
+    func testQR() { montar(QRPerfil(), segundos: 1) }
+    func testAsiTeVen() { montar(NavigationStack { AsiTeVen(qr: .constant(false)) }) }
+    func testEditarSecciones() {
+        for s in SeccionPerfil.allCases { montar(NavigationStack { EditarSeccionPerfil(seccion: s) }, segundos: 0.3) }
+    }
+    func testPerfilVacio() {
+        var p = DatosDeMuestra.perfilLucia
+        p.fotoAsset = nil; p.certificaciones = []; p.resenas = []; p.galeria = []; p.frase = ""; p.sobreMi = ""
+        XCTAssertLessThan(p.completitud, 60)
+        XCTAssertEqual(p.pendientes.first?.0, "Tu foto")
+        XCTAssertNotNil(QR.imagen(p.link.absoluteString))
+        XCTAssertEqual(DatosDeMuestra.perfilLucia.pendientes.count, 2)
+    }
     func testHojaClase() { montar(HojaClase(claseId: "fm@2026-11-26")) }
     func testNuevaClase() { montar(HojaNuevaClase(fecha: "2026-11-29")) }
 
