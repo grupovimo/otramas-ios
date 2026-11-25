@@ -178,6 +178,8 @@ struct ClaseFija: Codable, Hashable, Identifiable {
     var cupo: Int
     var inscriptos: [String]
     var particular: String? = nil
+    /// Quienes esperan un lugar.
+    var espera: [String] = []
 }
 
 /// Lo que cambió en una fecha puntual de una clase fija.
@@ -232,6 +234,12 @@ struct PanelProfe: Codable, Hashable {
     var feriados: [String: String] = [:]
     /// La fecha de «hoy» en la maqueta (martes 24 de noviembre de 2026).
     var hoyISO: String
+    var detalles: [String: DetalleAlumno] = DatosDeMuestra.detalles
+    var abonos: [Abono] = DatosDeMuestra.abonos
+    var avisos: [AvisoProfe] = DatosDeMuestra.avisos
+    var cobros: ConfigCobros = DatosDeMuestra.configCobros
+    var integraciones: [Integracion] = DatosDeMuestra.integraciones
+    var notificaciones: [String: Bool] = ["Pagos": true, "Faltas": true, "Recordatorios": true, "Resumen semanal": false]
 }
 
 // MARK: - Alumno
@@ -307,6 +315,18 @@ struct PlanAlumno: Codable, Hashable {
     var alias: String
 }
 
+/// Un entrenamiento hecho (historial del alumno).
+struct Entrenamiento: Codable, Hashable, Identifiable {
+    var id: String { fecha }
+    var fecha: String
+    var rutina: String
+    var dia: String
+    var minutos: Int
+    var series: Int
+    var volumen: Int
+    var ejercicios: [String]
+}
+
 struct PanelAlumno: Codable, Hashable {
     var nombre: String
     var profe: String
@@ -314,6 +334,14 @@ struct PanelAlumno: Codable, Hashable {
     var sesion: SesionHoy
     var logros: Logros
     var plan: PlanAlumno
+    var historial: [Entrenamiento] = DatosDeMuestra.historial
+    /// Diciembre: pagada, en revisión (subió comprobante) o pendiente.
+    var cuotaPagada = false
+    var comprobanteEnRevision = false
+    /// Fechas en las que avisó que falta.
+    var faltas: [String] = []
+    /// Ids de clases donde reservó recuperación.
+    var reservas: [String] = []
 }
 
 // MARK: - Formato

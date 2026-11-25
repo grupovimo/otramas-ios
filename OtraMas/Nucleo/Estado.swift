@@ -127,9 +127,11 @@ final class Estado {
         guard let i = profe.alumnos.firstIndex(where: { $0.id == alumnoId }),
               case .porConfirmar(let c) = profe.alumnos[i].cuota else { return }
         Haptico.exito()
+        let fecha = profe.hoyISO
         withAnimation(.spring(duration: 0.6, bounce: 0.2)) {
             profe.alumnos[i].cuota = .alDia
             cobrar(monto: c.monto)
+            profe.detalles[alumnoId]?.pagos.append(Pago(alumnoId: alumnoId, mes: "2026-11", monto: c.monto, medio: .transferencia, fecha: fecha))
         }
         let datos = self.datos
         Task { try? await datos.confirmarComprobante(alumnoId: alumnoId, comprobanteId: c.id) }
@@ -138,9 +140,11 @@ final class Estado {
     func registrarCobro(alumnoId: String, monto: Int, medio: MedioPago) {
         guard let i = profe.alumnos.firstIndex(where: { $0.id == alumnoId }) else { return }
         Haptico.exito()
+        let fecha = profe.hoyISO
         withAnimation(.spring(duration: 0.6, bounce: 0.2)) {
             profe.alumnos[i].cuota = .alDia
             cobrar(monto: monto)
+            profe.detalles[alumnoId]?.pagos.append(Pago(alumnoId: alumnoId, mes: "2026-11", monto: monto, medio: medio, fecha: fecha))
             if let m = profe.resumen.medios.firstIndex(where: { $0.medio == medio }) { profe.resumen.medios[m].cuotas += 1 }
         }
         let datos = self.datos

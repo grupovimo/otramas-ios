@@ -40,6 +40,35 @@ struct TuMes: View {
                 Text("\(r.medios.reduce(0) { $0 + $1.cuotas }) cuotas").tipo(.texto(14, 400)).foregroundStyle(Color.texto2)
             }
             pagan(r)
+            let activos = estado.profe.detalles.values.filter { $0.estado == .activo }.count
+            let bajas = estado.profe.detalles.values.filter { $0.estado != .activo }.count
+            TituloSeccion("Altas y bajas")
+            HStack(spacing: 12) {
+                dato("+\(r.nuevos)", nil, "Altas este mes")
+                dato("\(bajas)", nil, "En pausa o baja")
+                dato("\(activos)", nil, "Activos hoy")
+            }
+            TituloSeccion(texto: "En riesgo de dejar") {
+                Text("faltan seguido").tipo(.texto(14, 400)).foregroundStyle(Color.texto2)
+            }
+            let riesgo = estado.enRiesgo
+            if riesgo.isEmpty {
+                Tarjeta(relleno: 20) { Text("Nadie está faltando seguido. ¡Bien!").tipo(.texto(15, 600)).foregroundStyle(Color.ok) }
+            } else {
+                Tarjeta {
+                    ForEach(Array(riesgo.prefix(5).enumerated()), id: \.element.alumno.id) { i, x in
+                        if i > 0 { Divisor() }
+                        HStack(spacing: 12) {
+                            Iniciales(texto: x.alumno.iniciales, tono: x.alumno.tono, tamano: 40)
+                            NomSub(nombre: x.alumno.nombre, sub: Text("Faltó \(x.faltas) de las últimas clases"))
+                            Boton(titulo: "Escribirle", icono: .wa, variante: .suave, alto: .chico) {
+                                estado.avisar("Le escribimos a \(x.alumno.primerNombre): «¡Te extrañamos! ¿Te veo esta semana?»")
+                            }
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 10)
+                    }
+                }
+            }
         }
     }
 

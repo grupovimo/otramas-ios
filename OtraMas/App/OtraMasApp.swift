@@ -84,6 +84,9 @@ enum Arranque: String, CaseIterable {
     case inicio, menu, tumes, cuotas, horario, suspender, alumnos, ficha, rutina, cobrar, lista, nuevo, ajustes, ejercicios, ejercicio
     case rutinas, rutinaDetalle = "rutina-detalle", asignar, enviar, pdf
     case perfil, editarPerfil = "editar-perfil", asiTeVen = "asi-te-ven", qr
+    case planes, cobrosPantalla = "cobros-pantalla", clases, avisos, ajustesProfe = "ajustes-profe"
+    case fichaProgreso = "ficha-progreso", fichaPagos = "ficha-pagos", fichaAsistencia = "ficha-asistencia"
+    case historial, progreso, misClases = "mis-clases", pagos, avisosAlumno = "avisos-alumno", perfilAlumno = "perfil-alumno", mas
     case hoy, logros, miplan
 
     static var actual: Arranque? {
@@ -98,7 +101,7 @@ enum Arranque: String, CaseIterable {
     var lado: Lado? {
         switch self {
         case .onboarding: return nil
-        case .hoy, .logros, .miplan: return .alumno
+        case .hoy, .logros, .miplan, .historial, .progreso, .misClases, .pagos, .avisosAlumno, .perfilAlumno, .mas: return .alumno
         case .carga: return .alumno
         default: return .profe
         }

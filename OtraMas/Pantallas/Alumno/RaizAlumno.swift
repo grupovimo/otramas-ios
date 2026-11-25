@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum PestanaAlumno: String, CaseIterable {
-    case hoy, logros, plan
+    case hoy, logros, plan, mas
 
     var titulo: String {
-        switch self { case .hoy: return "Hoy"; case .logros: return "Logros"; case .plan: return "Mi plan" }
+        switch self { case .hoy: return "Hoy"; case .logros: return "Logros"; case .plan: return "Mi plan"; case .mas: return "Más" }
     }
     var icono: Icono {
-        switch self { case .hoy: return .pesa; case .logros: return .trofeo; case .plan: return .cal }
+        switch self { case .hoy: return .pesa; case .logros: return .trofeo; case .plan: return .cal; case .mas: return .puntos }
     }
 }
 
@@ -16,11 +16,24 @@ struct RaizAlumno: View {
     var arranque: Arranque?
     @State private var pestana: PestanaAlumno = .hoy
 
+    private var inicialMas: DestinoAlumno? {
+        switch arranque {
+        case .historial: return .historial
+        case .progreso: return .progreso
+        case .misClases: return .clases
+        case .pagos: return .pagos
+        case .avisosAlumno: return .avisos
+        case .perfilAlumno: return .perfil
+        default: return nil
+        }
+    }
+
     var body: some View {
         TabView(selection: $pestana) {
             HoyToca().tag(PestanaAlumno.hoy).toolbar(.hidden, for: .tabBar)
             LogrosAlumno().tag(PestanaAlumno.logros).toolbar(.hidden, for: .tabBar)
             MiPlan().tag(PestanaAlumno.plan).toolbar(.hidden, for: .tabBar)
+            MasAlumno(inicial: inicialMas).tag(PestanaAlumno.mas).toolbar(.hidden, for: .tabBar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             BarraAlumno(pestana: $pestana)
@@ -29,6 +42,7 @@ struct RaizAlumno: View {
             switch arranque {
             case .logros: pestana = .logros
             case .miplan: pestana = .plan
+            case .historial, .progreso, .misClases, .pagos, .avisosAlumno, .perfilAlumno, .mas: pestana = .mas
             default: break
             }
         }

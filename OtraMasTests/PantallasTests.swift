@@ -79,6 +79,83 @@ final class PantallasTests: XCTestCase {
         XCTAssertNotNil(QR.imagen(p.link.absoluteString))
         XCTAssertEqual(DatosDeMuestra.perfilLucia.pendientes.count, 2)
     }
+    // Gestión del profe
+    func testPlanes() { montar(NavigationStack { PantallaPlanes() }) }
+    func testAumento() { montar(HojaAumento()) }
+    func testAbono() { montar(HojaAbono(abono: DatosDeMuestra.abonos[1])) }
+    func testCobrosPantalla() { montar(NavigationStack { PantallaCobros() }) }
+    func testMesCobros() { montar(HojaMesCobros(mes: "2026-10")) }
+    func testClases() { montar(NavigationStack { PantallaClases() }) }
+    func testEditarClase() { montar(HojaEditarClase(clase: DatosDeMuestra.horarioSemanal[2])) }
+    func testAvisos() { montar(NavigationStack { PantallaAvisos() }) }
+    func testHojaAviso() { montar(HojaAviso()) }
+    func testAjustesProfe() { montar(NavigationStack { AjustesProfe() }) }
+    func testIntegracion() { montar(HojaIntegracion(integracion: DatosDeMuestra.integraciones[1])) }
+    func testAyuda() { montar(HojaAyuda()) }
+    func testFichaPestanas() {
+        for p in PestanaFicha.allCases where p != .resumen { montar(ScrollView { FichaPestana(alumnoId: "carla", pestana: p) }, segundos: 0.3) }
+    }
+    func testFichaSinHistoria() { montar(ScrollView { FichaPestana(alumnoId: "ramiro", pestana: .progreso) }) }
+    func testMedicion() { montar(HojaMedicion(alumnoId: "carla")) }
+    func testEvaluacion() { montar(HojaEvaluacion(alumnoId: "carla")) }
+    func testLinkPago() { montar(HojaLinkPago(alumnoId: "martina")) }
+    func testAltaCompleta() { montar(HojaDatosAlumno()) }
+    func testEditarAlumno() { montar(HojaDatosAlumno(alumnoId: "carla")) }
+
+    // Alumno: «Más»
+    func testMasAlumno() { montar(MasAlumno()) }
+    func testHistorial() { montar(NavigationStack { HistorialAlumno() }) }
+    func testProgresoAlumno() { montar(NavigationStack { ProgresoAlumno() }) }
+    func testMisClases() { montar(NavigationStack { MisClases() }) }
+    func testPagosAlumno() { montar(NavigationStack { PagosAlumno() }) }
+    func testPagoMP() { montar(HojaPagoMP()) }
+    func testAvisosAlumno() { montar(NavigationStack { AvisosAlumno() }) }
+    func testPerfilAlumno() { montar(NavigationStack { PerfilAlumnoVista() }) }
+
+    func testGestion() throws {
+        let e = Estado()
+        // Aumento redondeado a $500.
+        XCTAssertEqual(e.conAumento(45000, 10), 49500)
+        e.aumentar(10, abonos: ["m3"], avisar: true)
+        XCTAssertEqual(e.abono("m3")?.precio, 49500)
+        // CSV real con encabezado y una fila por pago.
+        let csv = try String(contentsOf: e.csvCobros(mes: "2026-10"), encoding: .utf8)
+        XCTAssertTrue(csv.contains("Fecha;Mes;Alumno;Monto;Medio"))
+        XCTAssertEqual(csv.split(separator: "\n").count, e.pagos(delMes: "2026-10").count + 1)
+        XCTAssertGreaterThan((try Data(contentsOf: e.exportarTodo())).count, 10_000)
+        // Alta completa con clase fija.
+        let id = try XCTUnwrap(e.darDeAlta(nombre: "Julián Paz", telefono: "+54 223 555-0000", objetivo: .salud, lesiones: [],
+                                           abonoId: "m2", claseFijaId: "fs", inicio: "2026-12-01"))
+        XCTAssertTrue(e.profe.horario.first { $0.id == "fs" }!.inscriptos.contains(id))
+        e.cambiarEstado(id, a: .pausado)
+        XCTAssertEqual(e.estadoDe(id), .pausado)
+        // Asistencia real de Carla y alumnos en riesgo.
+        XCTAssertFalse(e.asistencia(de: "carla").isEmpty)
+        // Confirmar suma el pago al historial.
+        let antes = e.detalle("camila")!.pagos.count
+        e.confirmar(alumnoId: "camila")
+        XCTAssertEqual(e.detalle("camila")!.pagos.count, antes + 1)
+        // Avisos.
+        e.enviar(aviso: "Lluvia", texto: "Hoy no hay clase", para: "Funcional tarde")
+        XCTAssertEqual(e.profe.avisos.first?.cantidad, Set(e.destinatarios("Funcional tarde")).count)
+        XCTAssertEqual(e.profe.avisos.first?.cantidad, 16) // las dos «Funcional tarde» (mar-jue y lun-mié-vie)
+    }
+
+    func testAlumnoClasesYPagos() {
+        let e = Estado()
+        XCTAssertFalse(e.proximasDelAlumno.isEmpty)
+        XCTAssertFalse(e.paraRecuperar.isEmpty)
+        let c = e.paraRecuperar[0]
+        e.reservar(c.id)
+        XCTAssertEqual(e.alumno.plan.paraRecuperar, 0)
+        XCTAssertTrue(e.clase(c.id)!.presentes.contains("nico"))
+        e.avisarFalta(en: e.proximasDelAlumno[0].id)
+        XCTAssertEqual(e.alumno.plan.paraRecuperar, 1)
+        e.pagarCuotaAlumno()
+        XCTAssertTrue(e.alumno.cuotaPagada)
+        XCTAssertFalse(e.alumno.historial.isEmpty)
+    }
+
     func testHojaClase() { montar(HojaClase(claseId: "fm@2026-11-26")) }
     func testNuevaClase() { montar(HojaNuevaClase(fecha: "2026-11-29")) }
 

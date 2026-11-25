@@ -15,7 +15,7 @@ Para correr los tests de humo en Release (allí se cerraba Tu Local Web): sumá 
 
 Ilustraciones de ejercicios: `./importar-ejercicios.sh` pasa `propuestas/entrenadores/ejercicios/recortes/<sexo>/<id>.png` a JPG de 400×400 en `OtraMas/Recursos/Ejercicios/` y regenera `Nucleo/Catalogo.swift` desde `catalogo.json`. Después hay que correr `xcodegen generate`.
 
-Capturas de cada pantalla: `./capturar.sh` (o `./capturar.sh inicio cuotas`). Quedan en `capturas/`. Para abrir una pantalla directo, pasá el argumento de arranque `-pantalla <nombre>`. Los nombres posibles son `onboarding` (con `-paso N -ladoOnb profe|alumno`), `carga`, `ajustes`, `ejercicios`, `ejercicio`, `inicio`, `menu`, `tumes`, `cuotas`, `horario`, `suspender`, `alumnos`, `ficha`, `rutina`, `cobrar`, `lista`, `nuevo`, `hoy`, `logros` y `miplan`.
+Capturas de cada pantalla: `./capturar.sh` (o `./capturar.sh inicio cuotas`). Quedan en `capturas/`. Para abrir una pantalla directo, pasá el argumento de arranque `-pantalla <nombre>`. Los nombres posibles son `rutinas`, `rutina-detalle`, `asignar`, `enviar`, `pdf`, `perfil`, `editar-perfil`, `asi-te-ven`, `qr`, `planes`, `cobros-pantalla`, `clases`, `avisos`, `ajustes-profe`, `ficha-progreso`, `ficha-pagos`, `ficha-asistencia`, `mas`, `historial`, `progreso`, `mis-clases`, `pagos`, `avisos-alumno`, `perfil-alumno`, `onboarding` (con `-paso N -ladoOnb profe|alumno`), `carga`, `ajustes`, `ejercicios`, `ejercicio`, `inicio`, `menu`, `tumes`, `cuotas`, `horario`, `suspender`, `alumnos`, `ficha`, `rutina`, `cobrar`, `lista`, `nuevo`, `hoy`, `logros` y `miplan`.
 
 ## Estructura
 
@@ -24,6 +24,13 @@ Capturas de cada pantalla: `./capturar.sh` (o `./capturar.sh inicio cuotas`). Qu
 - `OtraMas/Tema`: los colores, la tipografía (Archivo y Figtree variables, con `wght` y `wdth`), los radios, los espacios y las sombras.
 - `OtraMas/Componentes`: la banda, la tarjeta, los botones, el stepper, el anillo (el algoritmo `data-anillo` porteado), los gráficos, la medalla, la barra flotante con el +1 y los íconos.
 - `OtraMas/Pantallas/Profe` y `OtraMas/Pantallas/Alumno`: las pantallas de cada lado.
+  - **Profe:** la barra es Inicio · Alumnos · +1 · Rutinas · Cuotas.
+    - Desde Inicio: Horario (con la próxima clase o «Semana»), Tu mes y la grilla «Tu negocio» (Cobros, Planes, Clases, Avisos, Tu mes y Ajustes).
+    - Ficha con pestañas: Resumen, Progreso, Pagos, Asistencia y Notas.
+    - Rutinas: plantillas, detalle, asignar, enviar y PDF A4.
+    - Tu perfil: editor por secciones, «Así te ven» y QR. Se abre tocando la foto.
+  - **Alumno:** pestañas Hoy, Logros, Mi plan y Más. En «Más» están Historial, Progreso, Mis clases, Pagos, Avisos y Perfil.
+- Las clases salen del horario semanal fijo (`ClaseFija`) más los cambios puntuales (`AjusteClase`), así que cualquier fecha tiene sus clases.
 
 ## Conectar datos reales
 

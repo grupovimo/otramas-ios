@@ -5,6 +5,7 @@ enum DestinoProfe: Hashable {
     case ficha(String)
     case horario
     case rutina(String)
+    case planes, cobros, clases, avisos, ajustes
 }
 
 /// Qué rutina se abre en el armado: una nueva o una existente.
@@ -132,7 +133,7 @@ struct RaizProfe: View {
             switch hoja {
             case .cobrar(let id): HojaCobrar(alumnoId: id)
             case .lista(let id): HojaPasarLista(claseId: id)
-            case .nuevo: HojaAlumnoNuevo()
+            case .nuevo: HojaDatosAlumno()
             case .suspender(let id): HojaSuspender(claseId: id)
             case .asignarRutina(let r, let a): HojaAsignarRutina(rutinaId: r, preelegidos: a)
             case .enviarRutina(let r): HojaEnviarRutina(rutinaId: r)
@@ -180,6 +181,12 @@ struct RaizProfe: View {
         case .lista: nav.hoja = .lista("c1")
         case .nuevo: nav.hoja = .nuevo
         case .ajustes: nav.hoja = .ajustes
+        case .planes: nav.inicio = [.planes]
+        case .cobrosPantalla: nav.inicio = [.cobros]
+        case .clases: nav.inicio = [.clases]
+        case .avisos: nav.inicio = [.avisos]
+        case .ajustesProfe: nav.inicio = [.ajustes]
+        case .fichaProgreso, .fichaPagos, .fichaAsistencia: nav.abrirFicha("carla")
         case .perfil: nav.hoja = .perfil(nil, false)
         case .editarPerfil: nav.hoja = .perfil(.seccion(.basicos), false)
         case .asiTeVen: nav.hoja = .perfil(.asiTeVen, false)
@@ -199,6 +206,11 @@ private struct Destinos: ViewModifier {
             case .ficha(let id): FichaAlumno(alumnoId: id)
             case .horario: Horario(apilada: true)
             case .rutina(let id): DetalleRutina(rutinaId: id)
+            case .planes: PantallaPlanes()
+            case .cobros: PantallaCobros()
+            case .clases: PantallaClases()
+            case .avisos: PantallaAvisos()
+            case .ajustes: AjustesProfe()
             }
         }
     }

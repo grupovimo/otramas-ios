@@ -18,10 +18,28 @@ struct MenuMasUno: View {
                     accion(.pesa, "Rutina nueva", "De cero o desde una foto") { nav.edicion = .nueva }
                 }
             }
+            HStack(spacing: 8) {
+                chica(.wa, "Aviso") { nav.pestana = .inicio; nav.inicio = [.avisos] }
+                chica(.cal, "Clase") { nav.pestana = .inicio; nav.inicio = [.clases] }
+                chica(.recibo, "Precios") { nav.pestana = .inicio; nav.inicio = [.planes] }
+            }
         }
         .padding(20)
         .background(Color.hueso, in: RoundedRectangle(cornerRadius: Radio.tarjeta, style: .continuous))
         .sombraMenu()
+    }
+
+    private func chica(_ i: Icono, _ t: String, _ hacer: @escaping () -> Void) -> some View {
+        Button {
+            Haptico.seleccion()
+            withAnimation(.spring(duration: 0.3)) { nav.menuAbierto = false }
+            hacer()
+        } label: {
+            HStack(spacing: 6) { IconoVista(i, tamano: 18); Text(t).tipo(.texto(15, 700)) }
+                .foregroundStyle(Color.berenjena800).frame(maxWidth: .infinity).frame(height: 44)
+                .background(Color.berenjena100, in: RoundedRectangle(cornerRadius: Radio.control, style: .continuous))
+        }
+        .buttonStyle(Apretable())
     }
 
     private func accion(_ i: Icono, _ t: String, _ s: String, _ hacer: @escaping () -> Void) -> some View {

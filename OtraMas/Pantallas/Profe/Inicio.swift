@@ -38,6 +38,7 @@ struct Inicio: View {
                     }
                 }
             }
+            Herramientas()
             if let t = estado.tip(.profe) {
                 TipVista(tip: t).padding(.top, 24)
             }

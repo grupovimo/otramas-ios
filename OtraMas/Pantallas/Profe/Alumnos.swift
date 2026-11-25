@@ -122,10 +122,25 @@ struct FichaAlumno: View {
     @Environment(NavProfe.self) private var nav
     @Environment(\.dismiss) private var dismiss
     let alumnoId: String
+    @State private var pestana: PestanaFicha = {
+        switch Arranque.actual {
+        case .fichaProgreso: return .progreso
+        case .fichaPagos: return .pagos
+        case .fichaAsistencia: return .asistencia
+        default: return .resumen
+        }
+    }()
+    @State private var editar = false
+    @State private var confirmarBaja = false
 
     var body: some View {
         if let a = estado.alumno(alumnoId) {
             contenido(a)
+                .sheet(isPresented: $editar) { HojaDatosAlumno(alumnoId: a.id) }
+                .confirmationDialog("¿Dar de baja a \(a.primerNombre)?", isPresented: $confirmarBaja, titleVisibility: .visible) {
+                    Button("Dar de baja", role: .destructive) { estado.cambiarEstado(a.id, a: .baja) }
+                    Button("Cancelar", role: .cancel) {}
+                } message: { Text("Deja de aparecer en tus clases y cobros. Su historia queda guardada por si vuelve.") }
         } else {
             Text("Ese alumno ya no está.").tipo(.texto(16, 600)).foregroundStyle(Color.texto2)
                 .frame(maxWidth: .infinity, maxHeight: .infinity).background(Color.hueso)
@@ -136,11 +151,19 @@ struct FichaAlumno: View {
         PantallaProfe(arribaCuerpo: 24) {
             NavBanda(atras: "Alumnos", accionAtras: { dismiss() }) {
                 Menu {
+                    Button { editar = true } label: { Label("Editar datos", systemImage: "pencil") }
+                    if let tel = estado.detalle(a.id)?.telefono, let url = URL(string: "tel:\(tel.filter { $0.isNumber || $0 == "+" })") {
+                        Link(destination: url) { Label("Llamar", systemImage: "phone") }
+                    }
                     Button { UIPasteboard.general.string = "https://otramas.com.ar/lucia/\(a.primerNombre.lowercased())"; estado.avisar("Copiamos el link de \(a.primerNombre).") } label: {
                         Label("Copiar su link", systemImage: "link")
                     }
-                    Button { estado.avisar("\(a.primerNombre) quedó en pausa.") } label: {
-                        Label("Pausar", systemImage: "pause.circle")
+                    switch estado.estadoDe(a.id) {
+                    case .activo:
+                        Button { estado.cambiarEstado(a.id, a: .pausado) } label: { Label("Pausar", systemImage: "pause.circle") }
+                        Button(role: .destructive) { confirmarBaja = true } label: { Label("Dar de baja", systemImage: "person.crop.circle.badge.minus") }
+                    case .pausado, .baja:
+                        Button { estado.cambiarEstado(a.id, a: .activo) } label: { Label("Reactivar", systemImage: "play.circle") }
                     }
                 } label: {
                     IconoVista(.puntos, tamano: 20).foregroundStyle(Color.hueso)
@@ -157,8 +180,33 @@ struct FichaAlumno: View {
             }
             .padding(.horizontal, Espacio.margen)
             .padding(.top, 8)
+            if estado.estadoDe(a.id) != .activo {
+                HStack(spacing: 8) {
+                    Text(estado.estadoDe(a.id) == .pausado ? "En pausa" : "Dado de baja").tipo(.texto(13, 700)).foregroundStyle(Color.berenjena800)
+                        .padding(.horizontal, 10).frame(height: 28).background(Color.yema, in: Capsule())
+                    Button("Reactivar") { estado.cambiarEstado(a.id, a: .activo) }
+                        .font(Estilo.texto(14, 700).font()).foregroundStyle(Color.yema).frame(height: 44)
+                }
+                .padding(.horizontal, Espacio.margen)
+                .padding(.top, 8)
+            }
             aros(a)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(PestanaFicha.allCases, id: \.self) { p in
+                        Chip(titulo: p.rawValue, elegido: pestana == p, sobreBanda: true) {
+                            Haptico.seleccion(); withAnimation(.snappy(duration: 0.2)) { pestana = p }
+                        }
+                    }
+                }
+                .padding(.horizontal, Espacio.margen)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.top, 20)
         } cuerpo: {
+          if pestana != .resumen {
+            FichaPestana(alumnoId: a.id, pestana: pestana)
+          } else {
             HStack(spacing: 8) {
                 accion("WhatsApp", .wa, color: .ok) { estado.avisar("Abrimos WhatsApp con \(a.primerNombre).") }
                 accion("Rutina", .pesa) { abrirRutina(a) }
@@ -212,6 +260,8 @@ struct FichaAlumno: View {
                 }
             }
             .padding(.top, 12)
+            DatosFicha(alumnoId: a.id)
+          }
         }
     }
 

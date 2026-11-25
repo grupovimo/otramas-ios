@@ -28,7 +28,19 @@ protocol Datos: Sendable {
     func crearClase(_ clase: ClaseFija, unica fecha: String?) async throws
     func crearAlumno(nombre: String, plan: String) async throws -> Alumno
 
+    // Gestión del profe
+    func guardarDetalle(alumnoId: String, _ detalle: DetalleAlumno) async throws
+    func guardarAbonos(_ abonos: [Abono]) async throws
+    func guardarClaseFija(_ clase: ClaseFija) async throws
+    func borrarClaseFija(id: String) async throws
+    func enviarAviso(_ aviso: AvisoProfe) async throws
+    func guardarCobros(_ config: ConfigCobros) async throws
+    func conectar(integracion id: String, _ conectada: Bool) async throws
+
     // Alumno
+    func pagarCuota(medio: MedioPago) async throws
+    func subirComprobante(_ datos: Data) async throws
+    func reservarRecuperacion(claseId: String) async throws
     func registrarSerie(ejercicioId: String, kilos: Double, reps: Int) async throws
     func avisarFalta() async throws
 }
@@ -57,6 +69,16 @@ struct DatosDeMuestra: Datos {
         Alumno(id: UUID().uuidString, nombre: nombre, tono: .berenjena, plan: plan, horario: "a definir",
                cuota: .alDia, asistencias: 0, clasesDelMes: 0, racha: 0, progreso: nil, pasos: nil, ultimaVez: 0)
     }
+    func guardarDetalle(alumnoId: String, _ detalle: DetalleAlumno) async throws {}
+    func guardarAbonos(_ abonos: [Abono]) async throws {}
+    func guardarClaseFija(_ clase: ClaseFija) async throws {}
+    func borrarClaseFija(id: String) async throws {}
+    func enviarAviso(_ aviso: AvisoProfe) async throws {}
+    func guardarCobros(_ config: ConfigCobros) async throws {}
+    func conectar(integracion id: String, _ conectada: Bool) async throws {}
+    func pagarCuota(medio: MedioPago) async throws {}
+    func subirComprobante(_ datos: Data) async throws {}
+    func reservarRecuperacion(claseId: String) async throws {}
     func registrarSerie(ejercicioId: String, kilos: Double, reps: Int) async throws {}
     func avisarFalta() async throws {}
 }

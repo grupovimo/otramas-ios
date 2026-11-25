@@ -104,7 +104,7 @@ extension DatosDeMuestra {
                   inscriptos: ["carla", "camila", "agustin", "martina", "joaquin", "sofia", "tomas", "valentina", "lucila", "gonzalo"]),
         ClaseFija(id: "np", nombre: "Nico Paredes", dias: [2, 4], hora: "10:30", lugar: "Particular", cupo: 1, inscriptos: ["nico"], particular: "nico"),
         ClaseFija(id: "ft", nombre: "Funcional tarde", dias: [2, 4], hora: "18:00", lugar: "Plaza España", cupo: 12,
-                  inscriptos: ["ezequiel", "lautaro", "julieta", "franco", "antonella", "agostina", "emiliano", "florencia", "matias", "paula", "rocio", "micaela"]),
+                  inscriptos: ["ezequiel", "lautaro", "julieta", "franco", "antonella", "agostina", "emiliano", "florencia", "matias", "paula", "rocio", "micaela"], espera: ["diego", "santiago"]),
         ClaseFija(id: "fl", nombre: "Funcional tarde", dias: [1, 3, 5], hora: "18:00", lugar: "Plaza España", cupo: 12,
                   inscriptos: ["matias", "paula", "rocio", "micaela", "facundo", "daniela", "florencia", "milagros", "bruno"]),
         ClaseFija(id: "fs", nombre: "Funcional sábado", dias: [6], hora: "9:30", lugar: "Costanera", cupo: 15,
