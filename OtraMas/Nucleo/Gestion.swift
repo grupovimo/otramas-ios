@@ -147,9 +147,15 @@ extension DatosDeMuestra {
         }
         if a.cuota == .alDia { pagos.append(Pago(alumnoId: a.id, mes: "2026-11", monto: precio, medio: medios[i % 3], fecha: "2026-11-0\(2 + i % 7)")) }
         let base = 58.0 + Double((i * 7) % 30)
-        let mediciones = (0..<6).map { k in
-            Medicion(fecha: meses.count > k ? "\(meses[k])-05" : "2026-11-05", peso: base + 3 - Double(k) * 0.6,
-                     grasa: i % 2 == 0 ? 28 - Double(k) * 0.7 : nil, cintura: 84 - Double(k), cadera: 101 - Double(k) * 0.5)
+        var mediciones: [Medicion] = []
+        for k in 0..<6 {
+            let dk = Double(k)
+            let fecha: String = k < meses.count ? meses[k] + "-05" : "2026-11-05"
+            let grasa: Double? = i % 2 == 0 ? 28.0 - dk * 0.7 : nil
+            let peso: Double = base + 3.0 - dk * 0.6
+            let cintura: Double = 84.0 - dk
+            let cadera: Double = 101.0 - dk * 0.5
+            mediciones.append(Medicion(fecha: fecha, peso: peso, grasa: grasa, cintura: cintura, cadera: cadera))
         }
         let objetivos = Objetivo.allCases
         var d = DetalleAlumno(telefono: "+54 223 5\(String(format: "%02d", 10 + i))-\(String(format: "%04d", 1200 + i * 37))",
@@ -181,9 +187,18 @@ extension DatosDeMuestra {
             d.marcas = [MarcaEjercicio(ejercicioId: "peso-muerto-rumano", kilos: 50, fecha: "2026-11-24"),
                         MarcaEjercicio(ejercicioId: "sentadilla-barra", kilos: 70, fecha: "2026-11-12"),
                         MarcaEjercicio(ejercicioId: "press-banca", kilos: 55, fecha: "2026-11-19")]
-            d.mediciones = (0..<6).map { k in Medicion(fecha: k < 5 ? "\(meses[k])-05" : "2026-11-05", peso: 81 - Double(k) * 0.6, grasa: 21 - Double(k) * 0.6, cintura: 88 - Double(k), cadera: 99) }
+            var medNico: [Medicion] = []
+            for k in 0..<6 {
+                let dk = Double(k)
+                let fecha: String = k < 5 ? meses[k] + "-05" : "2026-11-05"
+                let peso: Double = 81.0 - dk * 0.6
+                let grasa: Double = 21.0 - dk * 0.6
+                let cintura: Double = 88.0 - dk
+                medNico.append(Medicion(fecha: fecha, peso: peso, grasa: grasa, cintura: cintura, cadera: 99.0))
+            }
+            d.mediciones = medNico
         }
-        if a.id == "ramiro" { d.estado = .pausado }
+        if a.id == "ramiro" { d.estado = EstadoAlumno.pausado }
         return d
     }
 

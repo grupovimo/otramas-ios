@@ -366,31 +366,59 @@ struct HojaEvaluacion: View {
     @State private var valor: Double = 40
     private let tests: [(String, String)] = [("Sentadilla 1RM", "kg"), ("Peso muerto 1RM", "kg"), ("Plancha", "s"), ("Test de Cooper", "m"), ("Flexiones", "reps"), ("Salto en largo", "cm")]
 
+    // Partido en piezas chicas: en el Xcode de GitHub, la versión de una sola expresión no llegaba a compilar.
+    private var unidad: String { tests.first { $0.0 == test }?.1 ?? "" }
+    private var pasoValor: Double {
+        switch unidad {
+        case "m": return 50
+        case "kg": return 2.5
+        default: return 1
+        }
+    }
+    private var anterior: Evaluacion? {
+        let evs: [Evaluacion] = estado.detalle(alumnoId)?.evaluaciones ?? []
+        return evs.filter { $0.nombre == test }.last
+    }
+
     var body: some View {
-        let unidad = tests.first { $0.0 == test }?.1 ?? ""
         VStack(alignment: .leading, spacing: 0) {
             CabezaHoja(etiqueta: estado.alumno(alumnoId)?.nombre, titulo: "Evaluación")
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    ChipsClaros(opciones: tests.map(\.0), elegidas: [test]) { test = $0 }
-                    Tarjeta { Paso(etiqueta: "Resultado (\(unidad))", valor: $valor, paso: unidad == "m" ? 50 : unidad == "kg" ? 2.5 : 1, rango: 0...5000, formato: Formato.decimal) }
-                    if let ant = estado.detalle(alumnoId)?.evaluaciones.filter({ $0.nombre == test }).last {
-                        Text("La última vez: \(Formato.decimal(ant.valor)) \(ant.unidad) el \(Fecha.corta(ant.fecha))").tipo(.texto(14, 400)).foregroundStyle(Color.texto2)
-                    }
-                }
-                .padding(.top, 24)
-            }
-            Boton(titulo: "Guardar", icono: .tilde, variante: .prim, alto: .alto, ancho: true) {
-                estado.sumar(evaluacion: Evaluacion(nombre: test, valor: valor, unidad: unidad, fecha: estado.hoy), a: alumnoId)
-                dismiss()
-            }
-            .padding(.bottom, 8)
+            ScrollView { contenido.padding(.top, 24) }
+            guardar.padding(.bottom, 8)
         }
         .padding(.horizontal, Espacio.margen)
         .estiloHoja()
-        .onChange(of: test) { _, t in
-            valor = estado.detalle(alumnoId)?.evaluaciones.filter { $0.nombre == t }.last?.valor ?? (t == "Test de Cooper" ? 2000 : 30)
+        .onChange(of: test) { _, t in valor = valorInicial(t) }
+    }
+
+    private var contenido: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ChipsClaros(opciones: tests.map(\.0), elegidas: [test]) { test = $0 }
+            Tarjeta {
+                Paso(etiqueta: "Resultado (" + unidad + ")", valor: $valor, paso: pasoValor, rango: 0...5000, formato: Formato.decimal)
+            }
+            if let ant = anterior {
+                Text(textoAnterior(ant)).tipo(.texto(14, 400)).foregroundStyle(Color.texto2)
+            }
         }
+    }
+
+    private var guardar: some View {
+        Boton(titulo: "Guardar", icono: .tilde, variante: .prim, alto: .alto, ancho: true) {
+            let ev = Evaluacion(nombre: test, valor: valor, unidad: unidad, fecha: estado.hoy)
+            estado.sumar(evaluacion: ev, a: alumnoId)
+            dismiss()
+        }
+    }
+
+    private func textoAnterior(_ ant: Evaluacion) -> String {
+        "La última vez: " + Formato.decimal(ant.valor) + " " + ant.unidad + " el " + Fecha.corta(ant.fecha)
+    }
+
+    private func valorInicial(_ t: String) -> Double {
+        let evs: [Evaluacion] = estado.detalle(alumnoId)?.evaluaciones ?? []
+        if let v = evs.filter({ $0.nombre == t }).last?.valor { return v }
+        return t == "Test de Cooper" ? 2000 : 30
     }
 }
 
